@@ -30,7 +30,7 @@ fun tryGetInputFromSite(day: Int): String {
     val client = HttpClient.newBuilder().build()
     val request = HttpRequest.newBuilder()
         .uri(URI.create("https://adventofcode.com/$year/day/$day/input"))
-        .setHeader("cookie", File("src", ".cookie").readText())
+        .setHeader("cookie", File("data", ".cookie").readText())
         .build()
 
     val response = client.send(request, HttpResponse.BodyHandlers.ofString())
