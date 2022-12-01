@@ -1,15 +1,5 @@
-# aoc2022
-
-Welcome to the Advent of Code[^aoc] Kotlin project created by [nomoor][github] using the [Advent of Code Kotlin Template][template] delivered by JetBrains.
-
-In this repository, nomoor is about to provide solutions for the puzzles using [Kotlin][kotlin] language.
-
-If you're stuck with Kotlin-specific questions or anything related to this template, check out the following resources:
-
-- [Kotlin docs][docs]
-- [Kotlin Slack][slack]
-- Template [issue tracker][issues]
-
+# AOC 2022 Livestreams
+[![IMAGE ALT TEXT HERE](https://i9.ytimg.com/vi/l6mnGKT28JY/mqdefault.jpg?sqp=COiToZwG&rs=AOn4CLAdE2nIjk-_PJBNN357NZOf6nzzag)](https://www.youtube.com/watch?v=l6mnGKT28JY&list=PLjfw7H5wdSqo_SWLrPyQn0HJwHuP2_yjq)
 
 [^aoc]:
     [Advent of Code][aoc] – An annual event of Christmas-oriented programming challenges started December 2015.

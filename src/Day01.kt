@@ -1,17 +1,30 @@
 fun main() {
-  fun part1(input: List<String>): Int {
-    return input.size
+  fun part1(input: String): Int {
+    var elfs = mutableListOf<MutableList<Int>>()
+
+    var elf = mutableListOf<Int>()
+    for (s in input.split("\n")) {
+      if (s.isEmpty()) {
+        elfs.add(elf)
+        elf = mutableListOf()
+        continue
+      }
+
+      val i = s.toInt()
+      elf.add(i)
+    }
+    elfs.add(elf)
+
+    return elfs.map { it.sum() }.max()
   }
 
-  fun part2(input: List<String>): Int {
-    return input.size
-  }
+  fun part2(input: String): Int {
+    val elfs = input.split("\n\n").map { it.split("\n").sumOf { it.toInt() } }
 
-  // test if implementation meets criteria from the description, like:
-  val testInput = readInput(1, test=true)
-  output(part1(testInput), "test")
+    return elfs.sorted().takeLast(3).sum()
+  }
 
   val input = readInput(1)
-  output(part1(input), "pt1")
-  output(part2(input), "pt2")
+  output(part1(input))
+  output(part2(input))
 }

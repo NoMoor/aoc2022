@@ -14,7 +14,7 @@ const val year = 2022
 /**
  * Reads lines from the given input txt file.
  */
-fun readInput(dayNum: Int, test: Boolean = false): List<String> {
+fun readInput(dayNum: Int, test: Boolean = false): String {
     val paddedDay = dayNum.toString().padStart(2, '0')
     val fileName = if (test) "Day${paddedDay}_test.txt" else "Day${paddedDay}.txt"
     val file = File("src", "$fileName.txt")
@@ -23,13 +23,14 @@ fun readInput(dayNum: Int, test: Boolean = false): List<String> {
         file.writeText(if (test) "" else tryGetInputFromSite(dayNum))
     }
 
-    return file.readLines()
+    return file.readLines().joinToString { it + "\n" }
 }
 
 fun tryGetInputFromSite(day: Int): String {
     val client = HttpClient.newBuilder().build()
     val request = HttpRequest.newBuilder()
         .uri(URI.create("https://adventofcode.com/$year/day/$day/input"))
+        .setHeader("User-Agent", "github.com/NoMoor/aoc2022 by andrewscotthat@gmail.com")
         .setHeader("cookie", File("data", ".cookie").readText())
         .build()
 
@@ -51,4 +52,9 @@ fun output(o: Any, prefix: String = "") {
             StringSelection(o.toString()),
             null
         )
+}
+
+/** Split the list of strings with groupings separated by a blank string. */
+fun blankDelimited(l: List<String>) : List<List<String>> {
+    return l.joinToString("\n").split("\n\n").map { it.split("\n") }
 }
