@@ -14,16 +14,16 @@ const val year = 2022
 /**
  * Reads lines from the given input txt file.
  */
-fun readInput(dayNum: Int, test: Boolean = false): String {
+fun readInput(dayNum: Int, test: Boolean = false): List<String> {
     val paddedDay = dayNum.toString().padStart(2, '0')
     val fileName = if (test) "Day${paddedDay}_test.txt" else "Day${paddedDay}.txt"
-    val file = File("src", "$fileName.txt")
+    val file = File("src", fileName)
 
     if (!file.exists()) {
         file.writeText(if (test) "" else tryGetInputFromSite(dayNum))
     }
 
-    return file.readLines().joinToString { it + "\n" }
+    return file.readLines()
 }
 
 fun tryGetInputFromSite(day: Int): String {
