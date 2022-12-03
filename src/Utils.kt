@@ -7,9 +7,10 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.security.MessageDigest
+import java.util.concurrent.Callable
 
 const val year = 2022
-
+const val defaultText = "100"
 
 /**
  * Reads lines from the given input txt file.
@@ -19,14 +20,16 @@ fun readInput(dayNum: Int, test: Boolean = false): List<String> {
     val fileName = if (test) "Day${paddedDay}_test.txt" else "Day${paddedDay}.txt"
     val file = File("src", fileName)
 
-    if (!file.exists()) {
-        file.writeText(if (test) "" else tryGetInputFromSite(dayNum))
+    if (!file.exists() || file.readText().isEmpty()) {
+        file.writeText(if (test) defaultText else tryGetInputFromSite(dayNum))
     }
 
     return file.readLines()
 }
 
 fun tryGetInputFromSite(day: Int): String {
+    println("\n\nTry to get input input from Advent of code.\n")
+
     val client = HttpClient.newBuilder().build()
     val request = HttpRequest.newBuilder()
         .uri(URI.create("https://adventofcode.com/$year/day/$day/input"))
@@ -42,6 +45,15 @@ fun tryGetInputFromSite(day: Int): String {
  * Converts string to md5 hash.
  */
 fun String.md5(): String = BigInteger(1, MessageDigest.getInstance("MD5").digest(toByteArray())).toString(16)
+
+fun execute(c: Callable<Any>, label: String = "") {
+    println()
+    println("************* Start $label *************")
+    val out = c.call()
+    output(out, "Output: ")
+    println("************** End $label **************")
+    println()
+}
 
 fun output(o: Any, prefix: String = "") {
     println("$prefix $o")

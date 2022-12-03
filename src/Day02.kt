@@ -1,48 +1,45 @@
-fun main() {
+private class Day02(lines: List<String>) {
+  init { println(lines) }
+  private val rounds = lines.map { listOf(it[0].code - 'A'.code, it[2].code - 'X'.code) }
 
-  val m = mapOf('A' to 0, 'B' to 1, 'C' to 2)
-  val z = mapOf('X' to 0, 'Y' to 1, 'Z' to 2)
+  fun part1(): Int {
+    return rounds.map { r ->
+      // Computes the result of the round.
+      // Lose = 0
+      // Tie = 3
+      // Win = 6
+      val outcome = Math.floorMod(r[1] - r[0] + 1, 3) * 3
 
-  fun part1(input: List<String>): Int {
-    return input.map { t ->
-      val them = m[t[0]]!!
-      val us = z[t[2]]!!
-
-      var outcome = 0
-      if (them == us)
-        outcome = 3
-      else if ((them + 1) % 3 == us)
-        outcome = 6
-
-      us + 1 + outcome
+      (r[1] + 1) + outcome
     }.sum()
   }
 
-  fun part2(input: List<String>): Int {
-    return input
-      .map { t ->
-        val them = m[t[0]]!!
-        val result = z[t[2]]!!
+  fun part2(): Int {
+    return rounds
+      .map { r ->
+        val them = r[0]
+        val result = r[1]
 
-        var us = them
-        if (result == 0) {
-          // lose
-          us = them - 1
-          if (us == -1) us = 2
-        } else if (result == 2) {
-          // win
-          us = them + 1
-          if (us == 3) us = 0
+        val us = when (result) {
+          0 -> Math.floorMod(them - 1, 3)
+          2 -> Math.floorMod(them + 1, 3)
+          else -> them
         }
 
         us + 1 + (result * 3)
       }.sum()
   }
+}
 
-  val testInput = readInput(2, true)
-  output(part1(testInput))
+fun main() {
+  val day = 2
 
-  val input = readInput(2)
-  output(part1(input))
-  output(part2(input))
+  val todayTest = Day02(readInput(day, true))
+  execute(todayTest::part1, "Day[Test] $day: pt 1")
+
+  val today = Day02(readInput(day))
+  execute(today::part1, "Day $day: pt 1")
+
+  execute(todayTest::part2, "Day[Test] $day: pt 2")
+  execute(today::part2, "Day $day: pt 2")
 }
