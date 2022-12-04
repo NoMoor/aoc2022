@@ -3,22 +3,30 @@ private class Day04(lines: List<String>) {
     println(lines)
   }
 
-  private val lines = lines.map {
-    it.split(",").map {
-      val s = it.split("-")
-      s[0].toInt()..s[1].toInt()
-    }
+  private val lines = lines
+    .map { it.split(",")
+      .map {
+        val s = it.split("-")
+        s[0].toInt() .. s[1].toInt()
+      }}
+
+  fun IntRange.contains(b: IntRange): Boolean {
+    return this.first <= b.first && b.last <= this.last
+  }
+
+  fun IntRange.overlaps(b: IntRange): Boolean {
+    return this.contains(b.first) || this.contains(b.last) || b.contains(this.first)
   }
 
   fun part1(): Int {
     return lines.count {
-      return@count it[0].all(it[1]::contains) || it[1].all(it[0]::contains)
+      return@count it[0].contains(it[1]) || it[1].contains(it[0])
     }
   }
 
   fun part2(): Int {
     return lines.count {
-      return@count it[0].any(it[1]::contains) || it[1].any(it[0]::contains)
+      return@count it[0].overlaps(it[1])
     }
   }
 }
