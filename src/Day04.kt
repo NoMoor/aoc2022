@@ -3,12 +3,9 @@ private class Day04(lines: List<String>) {
     println(lines)
   }
 
-  private val lines = lines
-    .map { it.split(",")
-      .map {
-        val s = it.split("-")
-        s[0].toInt() .. s[1].toInt()
-      }}
+  private val lines = lines.map {
+    it.split(",").map { it.split("-").map { it.toInt() }.let { it.toRange() } }.let { it.toPair() }
+  }
 
   fun IntRange.contains(b: IntRange): Boolean {
     return this.first <= b.first && b.last <= this.last
@@ -20,13 +17,13 @@ private class Day04(lines: List<String>) {
 
   fun part1(): Int {
     return lines.count {
-      return@count it[0].contains(it[1]) || it[1].contains(it[0])
+      return@count it.first.contains(it.second) || it.second.contains(it.first)
     }
   }
 
   fun part2(): Int {
     return lines.count {
-      return@count it[0].overlaps(it[1])
+      return@count it.first.overlaps(it.second)
     }
   }
 }

@@ -65,6 +65,14 @@ fun output(o: Any, prefix: String = "") {
         )
 }
 
+fun <T> Iterable<T>.toPair(): Pair<T, T> {
+    return Pair(this.elementAt(0), this.elementAt(1))
+}
+
+fun Iterable<Int>.toRange(): IntRange {
+    return this.elementAt(0) .. this.elementAt(1)
+}
+
 /** Split the list of strings with groupings separated by a blank string. */
 fun blankDelimited(l: List<String>) : List<List<String>> {
     return l.joinToString("\n").split("\n\n").map { it.split("\n") }
