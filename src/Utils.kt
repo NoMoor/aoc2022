@@ -47,7 +47,6 @@ fun tryGetInputFromSite(day: Int): String {
 fun String.md5(): String = BigInteger(1, MessageDigest.getInstance("MD5").digest(toByteArray())).toString(16)
 
 fun execute(c: Callable<Any>, label: String = "") {
-    println()
     println("************* Start $label *************")
     val out = c.call()
     output(out, "Output: ")
