@@ -1,7 +1,5 @@
 private class Day03(lines: List<String>) {
-  init {
-    println(lines)
-  }
+  init { lines.forEach { println(it) } }
 
   private val lines = lines
     .map {
@@ -37,11 +35,11 @@ fun main() {
   val day = 3
 
   val todayTest = Day03(readInput(day, true))
-  execute(todayTest::part1, "Day[Test] $day: pt 1")
+  execute(todayTest::part1, "Day[Test] $day: pt 1", 157)
 
   val today = Day03(readInput(day))
-  execute(today::part1, "Day $day: pt 1")
+  execute(today::part1, "Day $day: pt 1", 7908)
 
-  execute(todayTest::part2, "Day[Test] $day: pt 2")
-  execute(today::part2, "Day $day: pt 2")
+  execute(todayTest::part2, "Day[Test] $day: pt 2", 70)
+  execute(today::part2, "Day $day: pt 2", 2838)
 }

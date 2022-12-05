@@ -1,38 +1,29 @@
-private class Day05(l: List<String>) {
-  init {
-    println(l)
-  }
-
-  private val lines = l.joinToString("\n").split("\n\n")
-
-  private val startingStacks = this.lines[0].lines()
-  private val stackCount = startingStacks.reversed()[0].last().digitToInt()
-  private val moves = this.lines[1].lines()
+private class Day05(val lines: List<String>) {
+  init { lines.forEach { println(it) } }
 
   fun part1(): String {
-    val stacks = MutableList<MutableList<Char>>(stackCount) { mutableListOf() }
-    startingStacks.reversed().drop(1)
-      .forEach {
-        it.chunked(4).forEachIndexed { i, str ->
-          if (str[1].isLetter()) stacks[i].add(str[1])
+    val (startingStacks, moves) = lines.splitBy { it == "" }
+    val stacks = startingStacks.reversed()[0].last().digitToInt() * mutableListOf<Char>()
+
+    startingStacks
+      .dropLast(1)
+      .forEach { it.chunked(4).forEachIndexed { i, str ->
+          if (str[1].isLetter()) stacks[i].add(0, str[1])
         }
       }
 
-    for (m in moves) {
-      val parts = m.split(" ")
-      val num = parts[1].toInt()
-      val s = parts[3].toInt() - 1
-      val d = parts[5].toInt() - 1
-
-      stacks[d].addAll(stacks[s].takeLast(num).reversed())
-      repeat(num) { stacks[s].removeLast() }
+    moves.forEach { m ->
+      val (num, s, d) = m.allInts()
+      stacks[d - 1].addAll(stacks[s - 1].removeLast(num).reversed())
     }
 
     return stacks.joinToString(separator = "") { if (it.isNotEmpty()) it.last().toString() else "" }
   }
 
   fun part2(): String {
-    val stacks = MutableList<MutableList<Char>>(stackCount) { mutableListOf() }
+    val (startingStacks, moves) = lines.splitBy { it == "" }
+    val stacks = startingStacks.reversed()[0].last().digitToInt() * mutableListOf<Char>()
+
     startingStacks.reversed().drop(1)
       .forEach {
         it.chunked(4).forEachIndexed { i, str ->
@@ -40,14 +31,9 @@ private class Day05(l: List<String>) {
         }
       }
 
-    for (m in moves) {
-      val parts = m.split(" ")
-      val num = parts[1].toInt()
-      val s = parts[3].toInt() - 1
-      val d = parts[5].toInt() - 1
-
-      stacks[d].addAll(stacks[s].takeLast(num))
-      repeat(num) { stacks[s].removeLast() }
+    moves.forEach { m ->
+      val (num, s, d) = m.allInts()
+      stacks[d - 1].addAll(stacks[s - 1].removeLast(num))
     }
 
     return stacks.joinToString(separator = "") { if (it.isNotEmpty()) it.last().toString() else "" }
@@ -58,11 +44,11 @@ fun main() {
   val day = "05".toInt()
 
   val todayTest = Day05(readInput(day, true))
-  execute(todayTest::part1, "Day[Test] $day: pt 1")
+  execute(todayTest::part1, "Day[Test] $day: pt 1", "CMZ")
 
   val today = Day05(readInput(day))
-  execute(today::part1, "Day $day: pt 1")
+  execute(today::part1, "Day $day: pt 1", "FWNSHLDNZ")
 
-  execute(todayTest::part2, "Day[Test] $day: pt 2")
-  execute(today::part2, "Day $day: pt 2") // Wrong guess: FWNSHLDNZ
+  execute(todayTest::part2, "Day[Test] $day: pt 2", "MCD")
+  execute(today::part2, "Day $day: pt 2", "RNRGDNFQG") // Wrong guess: FWNSHLDNZ
 }
