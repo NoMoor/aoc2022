@@ -9,7 +9,6 @@ private class Day05(l: List<String>) {
   private val stackCount = startingStacks.reversed()[0].last().digitToInt()
   private val moves = this.lines[1].lines()
 
-  // TODO: One way to make this a bit shorter would be to use map instead of list.
   fun part1(): String {
     val stacks = MutableList<MutableList<Char>>(stackCount) { mutableListOf() }
     for (s in startingStacks.reversed().drop(1)) {
