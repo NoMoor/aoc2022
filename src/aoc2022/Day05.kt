@@ -1,3 +1,12 @@
+package aoc2022
+
+import allInts
+import execute
+import readInput
+import removeLast
+import splitBy
+import times
+
 private class Day05(val lines: List<String>) {
   init { lines.forEach { println(it) } }
 
@@ -43,10 +52,10 @@ private class Day05(val lines: List<String>) {
 fun main() {
   val day = "05".toInt()
 
-  val todayTest = Day05(readInput(day, true))
+  val todayTest = Day05(readInput(day, 2022, true))
   execute(todayTest::part1, "Day[Test] $day: pt 1", "CMZ")
 
-  val today = Day05(readInput(day))
+  val today = Day05(readInput(day, 2022))
   execute(today::part1, "Day $day: pt 1", "FWNSHLDNZ")
 
   execute(todayTest::part2, "Day[Test] $day: pt 2", "MCD")

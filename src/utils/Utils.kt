@@ -8,6 +8,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.security.MessageDigest
 import java.util.concurrent.Callable
+import kotlin.io.path.Path
 
 const val year = 2022
 const val defaultText = "100"
@@ -15,10 +16,10 @@ const val defaultText = "100"
 /**
  * Reads lines from the given input txt file.
  */
-fun readInput(dayNum: Int, test: Boolean = false): List<String> {
+fun readInput(dayNum: Int, year: Int, test: Boolean = false): List<String> {
   val paddedDay = dayNum.toString().padStart(2, '0')
   val fileName = if (test) "Day${paddedDay}_test.txt" else "Day${paddedDay}.txt"
-  val file = File("src", fileName)
+  val file = File(Path("src", "aoc$year").toFile(), fileName)
 
   if (!file.exists() || file.readText().isEmpty()) {
     file.writeText(if (test) defaultText else tryGetInputFromSite(dayNum))

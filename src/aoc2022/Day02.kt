@@ -1,3 +1,8 @@
+package aoc2022
+
+import execute
+import readInput
+
 private class Day02(lines: List<String>) {
   init { lines.forEach { println(it) } }
 
@@ -35,10 +40,10 @@ private class Day02(lines: List<String>) {
 fun main() {
   val day = 2
 
-  val todayTest = Day02(readInput(day, true))
+  val todayTest = Day02(readInput(day, 2022, true))
   execute(todayTest::part1, "Day[Test] $day: pt 1", 15)
 
-  val today = Day02(readInput(day))
+  val today = Day02(readInput(day, 2022))
   execute(today::part1, "Day $day: pt 1", 13675)
 
   execute(todayTest::part2, "Day[Test] $day: pt 2", 12)
