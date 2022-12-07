@@ -9,6 +9,7 @@ import java.net.http.HttpResponse
 import java.security.MessageDigest
 import java.util.concurrent.Callable
 import kotlin.io.path.Path
+import kotlin.system.measureNanoTime
 
 const val year = 2022
 const val defaultText = "100"
@@ -50,10 +51,14 @@ fun String.md5(): String = BigInteger(1, MessageDigest.getInstance("MD5").digest
 
 fun execute(c: Callable<Any>, label: String = "", expectedAnswer: Any = "") {
   println("\n************* Start $label *************")
-  val result = c.call()
 
-  if (!expectedAnswer.equals("")) {
-    check(result.equals(expectedAnswer)) { "Expected $expectedAnswer but got $result" }
+  var result: Any
+  val nanos = measureNanoTime { result = c.call() }
+
+  println(" Executed in ${formatNanos(nanos)}")
+
+  if (expectedAnswer != "") {
+    check(result == expectedAnswer) { "Expected $expectedAnswer but got $result" }
     println("Output `$result` matched expected answer ${if (label.isNotEmpty()) "for `$label`" else ""}")
   } else {
     println("${if (label.isNotEmpty()) "`$label` " else ""} $result")
@@ -61,6 +66,16 @@ fun execute(c: Callable<Any>, label: String = "", expectedAnswer: Any = "") {
   }
 
   println()
+}
+
+fun formatNanos(n: Long) : String {
+  return if (n < 900_000) {
+    "$n ns"
+  } else if (n < 900_000_000) {
+    "${"%.3f".format(n/1_000_000.0)} ms"
+  } else {
+    "${"%.3f".format(n/1_000_000_000.0)} s"
+  }
 }
 
 fun copyToClipboard(o: Any) {
@@ -95,10 +110,11 @@ fun <E> List<E>.splitBy(retainSplitter: Boolean = false, splitterPredicate: (E) 
   var nextList = mutableListOf<E>()
   for (e in this) {
     if (splitterPredicate(e)) {
-      if (retainSplitter) nextList.add(e)
 
       returnLists.add(nextList)
       nextList = mutableListOf()
+
+      if (retainSplitter) nextList.add(e)
       continue
     }
     nextList.add(e)
