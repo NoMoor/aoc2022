@@ -1,68 +1,82 @@
-private class Day07(lines: List<String>) {
+private class Day07(val lines: List<String>) {
 
-  // Map absolute-path -> Pair(files size, list of sub-dirs)
-  private val totalSizes: Map<String, Long>
-  private val directories: Map<String, Directory>
+  val rootDir = Directory("/")
+  var currentDirectory = rootDir
+  var directories = mutableMapOf<Directory, Long>()
 
   init {
-    val interactions = lines
-      .splitBy(retainSplitter = true) { it.startsWith("$") }
-      .filter { it.isNotEmpty() }
-
-    val currentPath = mutableListOf<String>()
-    directories = mutableMapOf()
-
-    for (interaction in interactions) {
-      val commandParts = interaction[0].split(" ").drop(1)
-
-      when (commandParts[0]) {
-        "ls" -> {
-          val commandOutput = interaction.drop(1)
-          val size = commandOutput
-            .filter { !it.startsWith("dir") }
-            .sumOf { it.split(" ")[0].toLong() }
-          val path = currentPath.joinToString("/")
-          val absPaths = commandOutput
-            .filter { it.startsWith("dir") }
-            .map { it.split(" ")[1] }
-            .map { "$path/$it" }
-
-          directories[path] = Directory(size, absPaths)
+    for (l in lines) {
+      if (l.startsWith("$ cd")) {
+        val dir = l.split(" ").last()
+        if (dir == "..") {
+          currentDirectory = currentDirectory.parent!!
+        } else if (dir == "/") {
+          currentDirectory = rootDir
+        } else {
+          currentDirectory = currentDirectory.directories.first { it.name == dir }
         }
-        "cd" -> {
-          if (commandParts[1] == "..") {
-            currentPath.removeLast()
-          } else {
-            currentPath.add(commandParts[1])
-          }
-        }
-        else -> assert(false) { "This shouldn't happen. $interaction" }
+      } else if (l.startsWith("dir")) {
+        val newDir = Directory(l)
+        currentDirectory.addDir(newDir)
+      } else if (l.startsWith("$ ls")) {
+        continue
+      } else {
+        currentDirectory.addFile(File(l))
       }
     }
 
-    totalSizes = directories.keys.associateWith { getTotalDirectorySize(it) }
-  }
-
-  private fun getTotalDirectorySize(path: String): Long {
-    val directory = directories[path]!!
-    return directory.size + directory.subDirs.map { getTotalDirectorySize(it) }.sum()
+    rootDir.computeSizes(directories)
   }
 
   fun part1(): Any {
-    return totalSizes.values.filter { it < 100000 }.sum()
+    println(directories)
+    return directories.values.filter { it < 100000 }.sum()
   }
 
   fun part2(): Any {
-    val totalDisk = totalSizes["/"]!!
-    val freeSpace = 70000000L - totalDisk
-    val deleteNeed = 30000000 - freeSpace
+    val totalSize = 70000000L
+    val freeSize = totalSize - directories[rootDir]!!
+    val neededSize = 30000000L
+    val toDelete = neededSize - freeSize
 
-    directories.keys.forEach { println(it) }
-
-    return totalSizes.values.filter { it >= deleteNeed }.min() // 38090606
+    return directories.values.filter { it >= toDelete }.min()
   }
 
-  data class Directory(val size: Long, val subDirs: List<String>)
+  data class Directory(var command: String) {
+    val name = command.split(" ").last()
+
+    fun addDir(newDir: Directory) {
+      directories.add(newDir)
+      newDir.parent = this
+    }
+
+    fun addFile(file: File) {
+      files.add(file)
+    }
+
+    fun computeSizes(index: MutableMap<Directory, Long>) : Long {
+      val directorySize = this.directories.sumOf { it.computeSizes(index) }
+      val fileSize = files.sumOf { it.size }
+
+      val size = directorySize + fileSize
+
+      index[this] = size
+      return size
+    }
+
+    override fun hashCode(): Int {
+      return super.hashCode()
+    }
+
+    val files = mutableListOf<File>()
+    val directories = mutableListOf<Directory>()
+    var parent: Directory? = null
+  }
+
+  data class File(val command: String) {
+    val name: String = command.split(" ")[1]
+    val size: Long = command.split(" ")[0].toLong()
+  }
 }
 
 fun main() {
