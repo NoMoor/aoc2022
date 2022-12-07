@@ -1,81 +1,43 @@
-private class Day07(val lines: List<String>) {
+private class Day07(lines: List<String>) {
+  data class Directory(var size: Long = 0) // Container to be able to change the value in dirs and path
 
-  val rootDir = Directory("/")
-  var currentDirectory = rootDir
-  var directories = mutableMapOf<Directory, Long>()
+  val dirs = mutableListOf<Directory>() // A list containing the sizes of all directories
+  val path = mutableListOf<Directory>() // A stack containing the current path of directories
 
   init {
-    for (l in lines) {
-      if (l.startsWith("$ cd")) {
-        val dir = l.split(" ").last()
-        if (dir == "..") {
-          currentDirectory = currentDirectory.parent!!
-        } else if (dir == "/") {
-          currentDirectory = rootDir
-        } else {
-          currentDirectory = currentDirectory.directories.first { it.name == dir }
-        }
-      } else if (l.startsWith("dir")) {
-        val newDir = Directory(l)
-        currentDirectory.addDir(newDir)
-      } else if (l.startsWith("$ ls")) {
-        continue
-      } else {
-        currentDirectory.addFile(File(l))
+    lines.forEach {
+      val parts = it.split(" ")
+      when (parts[0]) {
+        "$" -> // Commands
+          when (parts[1]) {
+            "cd" ->
+              when (parts[2]) {
+                ".." -> path.removeLast()
+                else -> {
+                  val d = Directory()
+                  dirs.add(d)
+                  path.add(d)
+                }
+              }
+            else -> Unit // Do nothing for ls
+          }
+        "dir" -> Unit // Do nothing for dir
+        // File
+        else -> path.forEach { it.size += parts[0].toLong() }
       }
     }
-
-    rootDir.computeSizes(directories)
   }
 
   fun part1(): Any {
-    println(directories)
-    return directories.values.filter { it < 100000 }.sum()
+    return dirs.map { it.size }.filter { it <= 100000 }.sum()
   }
 
   fun part2(): Any {
-    val totalSize = 70000000L
-    val freeSize = totalSize - directories[rootDir]!!
-    val neededSize = 30000000L
-    val toDelete = neededSize - freeSize
-
-    return directories.values.filter { it >= toDelete }.min()
-  }
-
-  data class Directory(var command: String) {
-    val name = command.split(" ").last()
-
-    fun addDir(newDir: Directory) {
-      directories.add(newDir)
-      newDir.parent = this
-    }
-
-    fun addFile(file: File) {
-      files.add(file)
-    }
-
-    fun computeSizes(index: MutableMap<Directory, Long>) : Long {
-      val directorySize = this.directories.sumOf { it.computeSizes(index) }
-      val fileSize = files.sumOf { it.size }
-
-      val size = directorySize + fileSize
-
-      index[this] = size
-      return size
-    }
-
-    override fun hashCode(): Int {
-      return super.hashCode()
-    }
-
-    val files = mutableListOf<File>()
-    val directories = mutableListOf<Directory>()
-    var parent: Directory? = null
-  }
-
-  data class File(val command: String) {
-    val name: String = command.split(" ")[1]
-    val size: Long = command.split(" ")[0].toLong()
+    val usedSpace = dirs.first().size
+    val totalSpace = 70000000
+    val freeSpace = totalSpace - usedSpace
+    val toDelete = 30000000 - freeSpace
+    return dirs.map { it.size }.filter { it >= toDelete }.min()
   }
 }
 
@@ -85,9 +47,9 @@ fun main() {
   val todayTest = Day07(readInput(day, 2022, true))
   execute(todayTest::part1, "Day[Test] $day: pt 1", 95437L)
 
-   val today = Day07(readInput(day, 2022))
-   execute(today::part1, "Day $day: pt 1", 1845346L) // 1523801 // 1540861
+  val today = Day07(readInput(day, 2022))
+  execute(today::part1, "Day $day: pt 1", 1845346L) // 1523801 // 1540861
 
-   execute(todayTest::part2, "Day[Test] $day: pt 2", 24933642L)
-   execute( { Day07(readInput(day, 2022)).part2() } , "Day $day: pt 2", 3636703L)
+  execute(todayTest::part2, "Day[Test] $day: pt 2", 24933642L)
+  execute({ Day07(readInput(day, 2022)).part2() }, "Day $day: pt 2", 3636703L)
 }
