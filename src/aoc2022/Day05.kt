@@ -7,7 +7,7 @@ import removeLast
 import splitBy
 import times
 
-private class Day05(val lines: List<String>) {
+class Day05(val lines: List<String>) {
   init { lines.forEach { println(it) } }
 
   fun part1(): String {
@@ -47,17 +47,23 @@ private class Day05(val lines: List<String>) {
 
     return stacks.joinToString(separator = "") { if (it.isNotEmpty()) it.last().toString() else "" }
   }
+
+  companion object {
+    fun runDay() {
+      val day = "05".toInt()
+
+      val todayTest = Day05(readInput(day, 2022, true))
+      execute(todayTest::part1, "Day[Test] $day: pt 1", "CMZ")
+
+      val today = Day05(readInput(day, 2022))
+      execute(today::part1, "Day $day: pt 1", "FWNSHLDNZ")
+
+      execute(todayTest::part2, "Day[Test] $day: pt 2", "MCD")
+      execute(today::part2, "Day $day: pt 2", "RNRGDNFQG") // Wrong guess: FWNSHLDNZ
+    }
+  }
 }
 
 fun main() {
-  val day = "05".toInt()
-
-  val todayTest = Day05(readInput(day, 2022, true))
-  execute(todayTest::part1, "Day[Test] $day: pt 1", "CMZ")
-
-  val today = Day05(readInput(day, 2022))
-  execute(today::part1, "Day $day: pt 1", "FWNSHLDNZ")
-
-  execute(todayTest::part2, "Day[Test] $day: pt 2", "MCD")
-  execute(today::part2, "Day $day: pt 2", "RNRGDNFQG") // Wrong guess: FWNSHLDNZ
+  Day05.runDay()
 }

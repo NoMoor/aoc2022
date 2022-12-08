@@ -3,7 +3,7 @@ package aoc2022
 import execute
 import readInput
 
-private class Day03(lines: List<String>) {
+class Day03(lines: List<String>) {
   init { lines.forEach { println(it) } }
 
   private val lines = lines
@@ -34,17 +34,23 @@ private class Day03(lines: List<String>) {
   fun part2(): Int {
     return lines2.sum()
   }
+
+  companion object {
+    fun runDay() {
+      val day = 3
+
+      val todayTest = Day03(readInput(day, 2022, true))
+      execute(todayTest::part1, "Day[Test] $day: pt 1", 157)
+
+      val today = Day03(readInput(day, 2022))
+      execute(today::part1, "Day $day: pt 1", 7908)
+
+      execute(todayTest::part2, "Day[Test] $day: pt 2", 70)
+      execute(today::part2, "Day $day: pt 2", 2838)
+    }
+  }
 }
 
 fun main() {
-  val day = 3
-
-  val todayTest = Day03(readInput(day, 2022, true))
-  execute(todayTest::part1, "Day[Test] $day: pt 1", 157)
-
-  val today = Day03(readInput(day, 2022))
-  execute(today::part1, "Day $day: pt 1", 7908)
-
-  execute(todayTest::part2, "Day[Test] $day: pt 2", 70)
-  execute(today::part2, "Day $day: pt 2", 2838)
+  Day03.runDay()
 }

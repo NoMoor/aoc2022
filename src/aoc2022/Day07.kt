@@ -1,5 +1,7 @@
-private class Day07(lines: List<String>) {
-  data class Directory(var size: Long = 0) // Container to be able to change the value in dirs and path
+import aoc2022.Day04
+
+class Day07(lines: List<String>) {
+  data class Directory(var size: Long = 0, val name: String, val parent: Directory?) // Container to be able to change the value in dirs and path
 
   val dirs = mutableListOf<Directory>() // A list containing the sizes of all directories
   val path = mutableListOf<Directory>() // A stack containing the current path of directories
@@ -14,7 +16,7 @@ private class Day07(lines: List<String>) {
               when (parts[2]) {
                 ".." -> path.removeLast()
                 else -> {
-                  val d = Directory()
+                  val d = Directory(name = parts[2], parent = path.lastOrNull())
                   dirs.add(d)
                   path.add(d)
                 }
@@ -39,17 +41,23 @@ private class Day07(lines: List<String>) {
     val toDelete = 30000000 - freeSpace
     return dirs.map { it.size }.filter { it >= toDelete }.min()
   }
+
+  companion object {
+    fun runDay() {
+      val day = "07".toInt()
+
+      val todayTest = Day07(readInput(day, 2022, true))
+      execute(todayTest::part1, "Day[Test] $day: pt 1", 95437L)
+
+      val today = Day07(readInput(day, 2022))
+      execute(today::part1, "Day $day: pt 1", 1845346L) // 1523801 // 1540861
+
+      execute(todayTest::part2, "Day[Test] $day: pt 2", 24933642L)
+      execute({ Day07(readInput(day, 2022)).part2() }, "Day $day: pt 2", 3636703L)
+    }
+  }
 }
 
 fun main() {
-  val day = "07".toInt()
-
-  val todayTest = Day07(readInput(day, 2022, true))
-  execute(todayTest::part1, "Day[Test] $day: pt 1", 95437L)
-
-  val today = Day07(readInput(day, 2022))
-  execute(today::part1, "Day $day: pt 1", 1845346L) // 1523801 // 1540861
-
-  execute(todayTest::part2, "Day[Test] $day: pt 2", 24933642L)
-  execute({ Day07(readInput(day, 2022)).part2() }, "Day $day: pt 2", 3636703L)
+  Day07.runDay()
 }
