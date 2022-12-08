@@ -1,4 +1,4 @@
-private class Day08(val lines: List<String>) {
+private class Day08(lines: List<String>) {
 
   private val grid: List<List<Int>>
 
@@ -19,31 +19,15 @@ private class Day08(val lines: List<String>) {
   private fun isVisible(r: Int, c: Int): Boolean {
     val height = grid[r][c]
     val row = grid[r]
-    if (r == 0 || r == row.size -1) {
-      return true
-    }
-    if (c == 0 || c == grid.size -1) {
+    if (r == 0 || r == row.size -1 || c == 0 || c == grid.size -1) {
       return true
     }
 
     val left = row.subList(0, c).max()
-    if (height > left) {
-      return true
-    }
     val right = row.subList(c + 1, grid.size).max()
-    if (height > right) {
-      return true
-    }
-
     val up = grid.map { it[c] }.subList(0, r).max()
-    if (height > up) {
-      return true
-    }
     val down = grid.map { it[c] }.subList(r + 1, grid.size).max()
-    if (height > down) {
-      return true
-    }
-    return false
+    return height > left || height > right || height > up || height > down
   }
 
   private fun treeScore(r: Int, c: Int): Int {
