@@ -9,7 +9,7 @@ private class Day09(val lines: List<String>) {
   data class Coord(val x: Int, val y: Int)
 
   fun part1(): Any {
-    val ps = mutableSetOf<Coord>()
+    val tailVisitedCoordinates = mutableSetOf<Coord>()
 
     var head = Coord(0, 0)
     var tail = Coord(0, 0)
@@ -23,10 +23,10 @@ private class Day09(val lines: List<String>) {
         head = moveHead(dir, head)
 
         tail = follow(head, tail)
-        ps.add(tail)
+        tailVisitedCoordinates.add(tail)
       }
     }
-    return ps.size
+    return tailVisitedCoordinates.size
   }
 
   fun part2(): Any {
