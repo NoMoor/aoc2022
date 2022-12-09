@@ -1,4 +1,5 @@
 import java.lang.Math.abs
+import kotlin.math.sign
 
 private class Day09(val lines: List<String>) {
   init {
@@ -27,27 +28,7 @@ private class Day09(val lines: List<String>) {
           "D" -> head = Coord(head.x, head.y - 1)
         }
 
-        if (head.x == tail.x) {
-          if (abs(head.y - tail.y) > 1) {
-            val d = if (head.y > tail.y) 1 else -1
-
-            tail = Coord(tail.x, tail.y + d)
-          }
-        } else if (head.y == tail.y) {
-          if (abs(head.x - tail.x) > 1) {
-            val d = if (head.x > tail.x) 1 else -1
-
-            tail = Coord(tail.x + d, tail.y)
-          }
-        } else if (abs(head.y - tail.y) == 1 && abs(head.x - tail.x) == 2) {
-          // offset 2 horizontally
-          val d = if (head.x > tail.x) 1 else -1
-          tail = Coord(tail.x + d, head.y)
-        } else if (abs(head.y - tail.y) == 2 && abs(head.x - tail.x) == 1) {
-          // offset 2 horizontally
-          val d = if (head.y > tail.y) 1 else -1
-          tail = Coord(head.x, tail.y + d)
-        }
+        tail = follow(head, tail)
 
         ps.add(tail)
       }
@@ -58,18 +39,14 @@ private class Day09(val lines: List<String>) {
   // Output where b is afterward
   fun follow(a: Coord, b: Coord) : Coord {
     if (a.x == b.x && abs(a.y - b.y) > 1) {
-      val dy = if (a.y > b.y) 1 else -1
-
-      return Coord(b.x, b.y + dy)
+      // Move up or down
+      return Coord(b.x, b.y + (a.y - b.y).sign)
     } else if (a.y == b.y && abs(a.x - b.x) > 1) {
-      val dx = if (a.x > b.x) 1 else -1
-
-      return Coord(b.x + dx, b.y)
+      // Move left or right
+      return Coord(b.x + (a.x - b.x).sign, b.y)
     } else if (abs(a.y - b.y) + abs(a.x - b.x) >= 3) {
-      // offset 2 both ways
-      val dx = if (a.x > b.x) 1 else -1
-      val dy = if (a.y > b.y) 1 else -1
-      return Coord(b.x + dx, b.y + dy)
+      // move diagonally
+      return Coord(b.x + (a.x - b.x).sign, b.y + (a.y - b.y).sign)
     }
     return b
   }
