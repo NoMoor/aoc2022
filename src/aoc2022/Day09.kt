@@ -64,7 +64,7 @@ private class Day09(val lines: List<String>) {
   /** Outputs where b is after following a. If a is adjacent to b, b does not move. */
   fun follow(a: Coord, b: Coord) : Coord {
     if (b !in a.neighbors()) {
-      return Coord(b.x + (a.x - b.x).sign, b.y + (a.y - b.y).sign)
+      return Coord(b.c + (a.c - b.c).sign, b.r + (a.r - b.r).sign)
     }
     return b
   }

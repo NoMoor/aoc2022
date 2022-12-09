@@ -150,16 +150,16 @@ fun allIntsInString(line: String): List<Int> {
     .toList()
 }
 
-data class Coord(val x: Int, val y: Int) {
+data class Coord(val c: Int, val r: Int) {
   constructor(p: Pair<Int, Int>) : this(p.first, p.second)
 
-  operator fun plus(o: Coord): Coord = Coord(x + o.x, y + o.y)
+  operator fun plus(o: Coord): Coord = Coord(c + o.c, r + o.r)
   operator fun plus(o: Pair<Int, Int>): Coord = this + Coord(o)
-  operator fun minus(o: Coord): Coord = Coord(x - o.x, y - o.y)
+  operator fun minus(o: Coord): Coord = Coord(c - o.c, r - o.r)
   operator fun minus(o: Pair<Int, Int>): Coord = this - Coord(o)
 
-  operator fun times(i: Int): Coord = Coord(x * i, y * i)
-  operator fun div(i: Int): Coord = Coord(x / i, y / i)
+  operator fun times(i: Int): Coord = Coord(c * i, r * i)
+  operator fun div(i: Int): Coord = Coord(c / i, r / i)
 
   private val horizontalSpecs = listOf("o", "O", "0", "+", "-", "_")
   private val verticalSpecs = listOf("o", "O", "0", "+", "i", "I", "|")
@@ -187,10 +187,27 @@ data class Coord(val x: Int, val y: Int) {
     return adjacent
   }
 
+  fun neighborsBounded(xRange: IntRange, yRange: IntRange, spec: String = "o"): List<Coord> {
+    return neighbors(spec)
+      .filter { it.c in xRange && it.r in yRange }
+      .toList()
+  }
+
+  fun neighborsBounded(width: Int, height: Int, spec: String = "o"): List<Coord> {
+    return neighborsBounded(0..width, 0..height, spec)
+  }
+
   companion object {
     val LEFT = Coord(-1, 0)
     val RIGHT = Coord(1, 0)
     val UP = Coord(0, 1)
     val DOWN = Coord(0, -1)
+  }
+
+  fun Pair<Coord, Coord>.contains(o: Coord) : Boolean {
+    val xRange = if (first.c <= second.c) (first.c..second.c) else (second.c..first.c)
+    val yRange = if (first.r <= second.r) (first.r..second.r) else (second.r..first.r)
+
+    return o.c in xRange && o.r in yRange
   }
 }
