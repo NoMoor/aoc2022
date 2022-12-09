@@ -6,9 +6,7 @@ private class Day09(val lines: List<String>) {
     lines.forEach { println(it) }
   }
 
-  data class Coord(val x: Int, val y: Int) {
-
-  }
+  data class Coord(val x: Int, val y: Int)
 
   fun part1(): Any {
     val ps = mutableSetOf<Coord>()
@@ -20,69 +18,62 @@ private class Day09(val lines: List<String>) {
       val (dir, n) = l.split(" ")
       val num = n.toInt()
 
+      // Move num steps in dir direction
       for (number in 0 until num) {
-        when (dir) {
-          "R" -> head = Coord(head.x + 1, head.y)
-          "L" -> head = Coord(head.x - 1, head.y)
-          "U" -> head = Coord(head.x, head.y + 1)
-          "D" -> head = Coord(head.x, head.y - 1)
-        }
+        head = moveHead(dir, head)
 
         tail = follow(head, tail)
-
         ps.add(tail)
       }
     }
     return ps.size
   }
 
-  // Output where b is afterward
-  fun follow(a: Coord, b: Coord) : Coord {
-    if (a.x == b.x && abs(a.y - b.y) > 1) {
-      // Move up or down
-      return Coord(b.x, b.y + (a.y - b.y).sign)
-    } else if (a.y == b.y && abs(a.x - b.x) > 1) {
-      // Move left or right
-      return Coord(b.x + (a.x - b.x).sign, b.y)
-    } else if (abs(a.y - b.y) + abs(a.x - b.x) >= 3) {
-      // move diagonally
-      return Coord(b.x + (a.x - b.x).sign, b.y + (a.y - b.y).sign)
-    }
-    return b
-  }
-
   fun part2(): Any {
-    val ps = mutableSetOf<Coord>()
+    val tailVisitedCoordinates = mutableSetOf<Coord>()
 
     var head = Coord(0, 0)
     // Make some knots
     val knots = (1 until 10).map { Coord(0, 0) }.toMutableList()
 
     for (l in lines) {
-      println(l)
-      val (dir, n) = l.split(" ")
-      val num = n.toInt()
+      val (dir, numS) = l.split(" ")
+      val num = numS.toInt()
 
-      for (number in 0 until num) {
-        when (dir) {
-          "R" -> head = Coord(head.x + 1, head.y)
-          "L" -> head = Coord(head.x - 1, head.y)
-          "U" -> head = Coord(head.x, head.y + 1)
-          "D" -> head = Coord(head.x, head.y - 1)
-        }
+      // Move num steps in dir direction
+      for (n in 0 until num) {
+        head = moveHead(dir, head)
 
+        // Move each follower knot
         for (i in knots.indices) {
           val first = if (i == 0) head else knots[i -1]
-          val second = knots[i]
-
-          val newPosition = follow(first, second)
-          knots[i] = newPosition
+          knots[i] = follow(first, knots[i])
         }
 
-        ps.add(knots.last())
+        tailVisitedCoordinates.add(knots.last())
       }
     }
-    return ps.size
+    return tailVisitedCoordinates.size
+  }
+
+  /** Moves the head one step in the specified direction. */
+  private fun moveHead(dir: String, head: Coord): Coord {
+    var head1 = head
+    when (dir) {
+      "R" -> head1 = Coord(head1.x + 1, head1.y)
+      "L" -> head1 = Coord(head1.x - 1, head1.y)
+      "U" -> head1 = Coord(head1.x, head1.y + 1)
+      "D" -> head1 = Coord(head1.x, head1.y - 1)
+    }
+    return head1
+  }
+
+  /** Outputs where b is after following a. If a is adjacent to b, b does not move. */
+  fun follow(a: Coord, b: Coord) : Coord {
+    if (abs(a.x - b.x) > 1 || abs(a.y - b.y) > 1) {
+      return Coord(b.x + (a.x - b.x).sign, b.y + (a.y - b.y).sign)
+    }
+    return b
   }
 }
 
