@@ -1,12 +1,10 @@
-import java.lang.Math.abs
+import java.rmi.UnexpectedException
 import kotlin.math.sign
 
 private class Day09(val lines: List<String>) {
   init {
     lines.forEach { println(it) }
   }
-
-  data class Coord(val x: Int, val y: Int)
 
   fun part1(): Any {
     val tailVisitedCoordinates = mutableSetOf<Coord>()
@@ -16,13 +14,12 @@ private class Day09(val lines: List<String>) {
 
     for (l in lines) {
       val (dir, n) = l.split(" ")
-      val num = n.toInt()
 
       // Move num steps in dir direction
-      for (number in 0 until num) {
+      repeat(n.toInt()) {
         head = moveHead(dir, head)
-
         tail = follow(head, tail)
+
         tailVisitedCoordinates.add(tail)
       }
     }
@@ -32,22 +29,19 @@ private class Day09(val lines: List<String>) {
   fun part2(): Any {
     val tailVisitedCoordinates = mutableSetOf<Coord>()
 
-    var head = Coord(0, 0)
     // Make some knots
-    val knots = (1 until 10).map { Coord(0, 0) }.toMutableList()
+    val knots = (0 until 10).map { Coord(0, 0) }.toMutableList()
 
     for (l in lines) {
-      val (dir, numS) = l.split(" ")
-      val num = numS.toInt()
+      val (dir, n) = l.split(" ")
 
       // Move num steps in dir direction
-      for (n in 0 until num) {
-        head = moveHead(dir, head)
+      repeat(n.toInt()) {
+        knots[0] = moveHead(dir, knots[0])
 
         // Move each follower knot
-        for (i in knots.indices) {
-          val first = if (i == 0) head else knots[i -1]
-          knots[i] = follow(first, knots[i])
+        for (i in 1 until knots.size) {
+          knots[i] = follow(knots[i - 1], knots[i])
         }
 
         tailVisitedCoordinates.add(knots.last())
@@ -58,19 +52,18 @@ private class Day09(val lines: List<String>) {
 
   /** Moves the head one step in the specified direction. */
   private fun moveHead(dir: String, head: Coord): Coord {
-    var head1 = head
-    when (dir) {
-      "R" -> head1 = Coord(head1.x + 1, head1.y)
-      "L" -> head1 = Coord(head1.x - 1, head1.y)
-      "U" -> head1 = Coord(head1.x, head1.y + 1)
-      "D" -> head1 = Coord(head1.x, head1.y - 1)
+    return head + when (dir) {
+      "R" -> Coord.RIGHT
+      "L" -> Coord.LEFT
+      "U" -> Coord.UP
+      "D" -> Coord.DOWN
+      else -> throw UnexpectedException("This should not happen $dir")
     }
-    return head1
   }
 
   /** Outputs where b is after following a. If a is adjacent to b, b does not move. */
   fun follow(a: Coord, b: Coord) : Coord {
-    if (abs(a.x - b.x) > 1 || abs(a.y - b.y) > 1) {
+    if (b !in a.neighbors()) {
       return Coord(b.x + (a.x - b.x).sign, b.y + (a.y - b.y).sign)
     }
     return b

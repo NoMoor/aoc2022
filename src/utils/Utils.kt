@@ -149,3 +149,48 @@ fun allIntsInString(line: String): List<Int> {
     .map { it.value.toInt() }
     .toList()
 }
+
+data class Coord(val x: Int, val y: Int) {
+  constructor(p: Pair<Int, Int>) : this(p.first, p.second)
+
+  operator fun plus(o: Coord): Coord = Coord(x + o.x, y + o.y)
+  operator fun plus(o: Pair<Int, Int>): Coord = this + Coord(o)
+  operator fun minus(o: Coord): Coord = Coord(x - o.x, y - o.y)
+  operator fun minus(o: Pair<Int, Int>): Coord = this - Coord(o)
+
+  operator fun times(i: Int): Coord = Coord(x * i, y * i)
+  operator fun div(i: Int): Coord = Coord(x / i, y / i)
+
+  private val horizontalSpecs = listOf("o", "O", "0", "+", "-", "_")
+  private val verticalSpecs = listOf("o", "O", "0", "+", "i", "I", "|")
+  private val rightDiagonalSpecs = listOf("o", "O", "0", "x", "X", "/")
+  private val leftDiagonalSpecs = listOf("o", "O", "0", "x", "X", "\\")
+
+  /**
+   * Neighbors based on the provided string spec.
+   * Strings are based on the shape of the neighbors (ex: o is all adjacent neighbors. - is horizontal neighborss only).
+   */
+  fun neighbors(spec: String = "o") : List<Coord> {
+    val adjacent = mutableListOf<Coord>()
+    if (spec in horizontalSpecs) {
+      adjacent.addAll(listOf(-1 to 0, 1 to 0).map { this + it })
+    }
+    if (spec in verticalSpecs) {
+      adjacent.addAll(listOf(0 to -1, 0 to 1).map { this + it })
+    }
+    if (spec in rightDiagonalSpecs) {
+      adjacent.addAll(listOf(-1 to -1, 1 to 1).map { this + it })
+    }
+    if (spec in leftDiagonalSpecs) {
+      adjacent.addAll(listOf(-1 to 1, 1 to -1).map { this + it })
+    }
+    return adjacent
+  }
+
+  companion object {
+    val LEFT = Coord(-1, 0)
+    val RIGHT = Coord(1, 0)
+    val UP = Coord(0, 1)
+    val DOWN = Coord(0, -1)
+  }
+}
