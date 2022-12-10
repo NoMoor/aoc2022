@@ -59,13 +59,15 @@ fun execute(c: Callable<Any>, label: String = "", expectedAnswer: Any = "") {
   var result: Any
   val nanos = measureNanoTime { result = c.call() }
 
-  println(" Executed in ${formatNanos(nanos)}")
+  println("Executed in ${formatNanos(nanos)}")
+  println()
 
   if (expectedAnswer != "") {
     check(result == expectedAnswer) { "Expected $expectedAnswer but got $result" }
-    println("Output `$result` matched expected answer ${if (label.isNotEmpty()) "for `$label`" else ""}")
+    println("Output matched expected answer ${if (label.isNotEmpty()) "for `$label`" else ""}")
+    println("$result")
   } else {
-    println("${if (label.isNotEmpty()) "`$label` " else ""} $result")
+    println("${if (label.isNotEmpty()) "`$label` " else ""} Result: \n$result")
     copyToClipboard(result)
   }
 
