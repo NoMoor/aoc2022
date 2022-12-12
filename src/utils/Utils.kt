@@ -138,8 +138,12 @@ private operator fun <E> List<E>.component6(): E {
   return this[6]
 }
 
-fun <E, T> Iterable<Iterable<E>>.deepMap(mapper: (E) -> T): List<List<T>> {
+fun <E, T> Iterable<Iterable<E>>.mapDeep(mapper: (E) -> T): List<List<T>> {
   return this.map { it.map(mapper) }
+}
+
+fun <E, T> Iterable<Iterable<E>>.mapDeepIndexed(mapper: (Int, Int, E) -> T): List<List<T>> {
+  return this.mapIndexed { r, row -> row.mapIndexed { c, item -> mapper(r, c, item) } }
 }
 
 /** Source: Mats56 on Reddit. https://www.reddit.com/r/adventofcode/comments/zcxid5/comment/iyz532y */

@@ -1,6 +1,9 @@
 package utils
 
 data class Coord private constructor(val c: Int, val r: Int) {
+  val x = c
+  val y = c
+
   private constructor(p: Pair<Int, Int>) : this(p.first, p.second)
 
   operator fun plus(o: Coord): Coord = Coord(c + o.c, r + o.r)

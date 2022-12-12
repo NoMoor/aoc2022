@@ -5,7 +5,7 @@ import utils.*
 internal class Day01(lines: List<String>) {
   init { lines.forEach { println(it) } }
 
-  val elves = lines.splitBy{ it.isEmpty() }.deepMap { it.toInt() }
+  val elves = lines.splitBy{ it.isEmpty() }.mapDeep { it.toInt() }
 
   fun part1() : Any {
     return elves.maxOf { it.sum() }

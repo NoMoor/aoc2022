@@ -1,7 +1,9 @@
 package aoc2022
 
 import utils.*
+import utils.mapDeepIndexed
 import utils.Coord.Companion.get
+import utils.Coord.Companion.rc
 import java.rmi.UnexpectedException
 import java.util.*
 
@@ -9,19 +11,15 @@ private class Day12(val lines: List<String>) {
   /** Parse lines into a list of interconnected nodes. */
   fun parseInput(filter: (a: Node, b: Node) -> Boolean): List<Node> {
     // Create nodes
-    val nodes = lines.mapIndexed { r, row ->
-      row.mapIndexed { c, col ->
-        Node(Coord.rc(r, c), col)
-      }
-    }
+    val nodes = lines.map { it.toList() }.mapDeepIndexed { r, c, value -> Node(rc( r, c), value) }
 
     // Map out neighbors
     nodes.forEach { row ->
-      row.forEach { col ->
-        col.neighbors.addAll(
-          col.loc.neighborsBounded(row.size, nodes.size, "+")
+      row.forEach { node ->
+        node.neighbors.addAll(
+          node.loc.neighborsBounded(row.size, nodes.size, "+")
             .map { nodes[it] }
-            .filter { filter(col, it) }
+            .filter { neighbor -> filter(node, neighbor) }
         )
       }
     }
