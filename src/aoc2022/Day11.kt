@@ -1,3 +1,6 @@
+package aoc2022
+
+import utils.*
 import java.rmi.UnexpectedException
 
 private class Day11(val lines: List<String>) {

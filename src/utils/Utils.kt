@@ -1,3 +1,5 @@
+package utils
+
 import java.awt.datatransfer.StringSelection
 import java.awt.Toolkit
 import java.io.File

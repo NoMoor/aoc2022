@@ -1,11 +1,8 @@
 package aoc2022
 
-import deepMap
-import execute
-import readInput
-import splitBy
+import utils.*
 
-class Day01(lines: List<String>) {
+private class Day01(lines: List<String>) {
   init { lines.forEach { println(it) } }
 
   val elves = lines.splitBy{ it.isEmpty() }.deepMap { it.toInt() }

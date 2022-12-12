@@ -1,7 +1,7 @@
 package utils
 
-data class Coord(val c: Int, val r: Int) {
-  constructor(p: Pair<Int, Int>) : this(p.first, p.second)
+data class Coord private constructor(val c: Int, val r: Int) {
+  private constructor(p: Pair<Int, Int>) : this(p.first, p.second)
 
   operator fun plus(o: Coord): Coord = Coord(c + o.c, r + o.r)
   operator fun plus(o: Pair<Int, Int>): Coord = this + Coord(o)
@@ -52,6 +52,14 @@ data class Coord(val c: Int, val r: Int) {
     val RIGHT = Coord(1, 0)
     val UP = Coord(0, 1)
     val DOWN = Coord(0, -1)
+
+    fun xy(x: Int, y: Int): Coord {
+      return Coord(x, y)
+    }
+
+    fun rc(r: Int, c: Int): Coord {
+      return Coord(c, r)
+    }
 
     operator fun <E> List<List<E>>.get(c: Coord) : E {
       return this[c.r][c.c]

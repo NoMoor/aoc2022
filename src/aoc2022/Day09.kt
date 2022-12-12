@@ -1,4 +1,4 @@
-import utils.Coord
+import utils.*
 import java.rmi.UnexpectedException
 import kotlin.math.sign
 
@@ -10,8 +10,8 @@ private class Day09(val lines: List<String>) {
   fun part1(): Any {
     val tailVisitedCoordinates = mutableSetOf<Coord>()
 
-    var head = Coord(0, 0)
-    var tail = Coord(0, 0)
+    var head = Coord.xy(0, 0)
+    var tail = Coord.xy(0, 0)
 
     for (l in lines) {
       val (dir, n) = l.split(" ")
@@ -31,7 +31,7 @@ private class Day09(val lines: List<String>) {
     val tailVisitedCoordinates = mutableSetOf<Coord>()
 
     // Make some knots
-    val knots = (0 until 10).map { Coord(0, 0) }.toMutableList()
+    val knots = (0 until 10).map { Coord.xy(0, 0) }.toMutableList()
 
     for (l in lines) {
       val (dir, n) = l.split(" ")
@@ -65,7 +65,7 @@ private class Day09(val lines: List<String>) {
   /** Outputs where b is after following a. If a is adjacent to b, b does not move. */
   fun follow(a: Coord, b: Coord) : Coord {
     if (b !in a.neighbors()) {
-      return Coord(b.c + (a.c - b.c).sign, b.r + (a.r - b.r).sign)
+      return Coord.rc(b.r + (a.r - b.r).sign, b.c + (a.c - b.c).sign)
     }
     return b
   }

@@ -1,9 +1,8 @@
 package aoc2022
 
-import execute
-import readInput
+import utils.*
 
-class Day04(lines: List<String>) {
+private class Day04(lines: List<String>) {
   init { lines.forEach { println(it) } }
 
   private val lines = lines

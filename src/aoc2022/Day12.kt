@@ -1,4 +1,6 @@
-import utils.Coord
+package aoc2022
+
+import utils.*
 import utils.Coord.Companion.get
 import java.rmi.UnexpectedException
 import java.util.*
@@ -65,7 +67,7 @@ private class Day12(val lines: List<String>) {
     map.indices.forEach { r ->
       map[r].indices.forEach { c ->
         if (map[r][c] == char) {
-          return Coord(c, r)
+          return Coord.rc(r, c)
         }
       }
     }

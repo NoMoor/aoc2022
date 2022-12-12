@@ -1,13 +1,8 @@
 package aoc2022
 
-import allInts
-import execute
-import readInput
-import removeLast
-import splitBy
-import times
+import utils.*
 
-class Day05(val lines: List<String>) {
+private class Day05(val lines: List<String>) {
   init { lines.forEach { println(it) } }
 
   fun part1(): String {

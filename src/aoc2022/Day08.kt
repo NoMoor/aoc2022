@@ -1,3 +1,7 @@
+package aoc2022
+
+import utils.*
+
 private class Day08(lines: List<String>) {
 
   private val grid: List<List<Int>>

@@ -1,10 +1,9 @@
 package aoc2022
 
-import execute
-import readInput
+import utils.*
 import java.rmi.UnexpectedException
 
-class Day06(val lines: List<String>) {
+private class Day06(val lines: List<String>) {
   init {
     lines.forEach { println(it) }
   }

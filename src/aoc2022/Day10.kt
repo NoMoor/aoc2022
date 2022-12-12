@@ -1,3 +1,7 @@
+package aoc2022
+
+import utils.*
+
 private class Day10(val lines: List<String>) {
   init {
     lines.forEach { println(it) }

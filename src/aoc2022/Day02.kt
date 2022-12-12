@@ -1,9 +1,8 @@
 package aoc2022
 
-import execute
-import readInput
+import utils.*
 
-class Day02(lines: List<String>) {
+private class Day02(lines: List<String>) {
   init { lines.forEach { println(it) } }
 
   private val rounds = lines.map { listOf(it[0].code - 'A'.code, it[2].code - 'X'.code) }
