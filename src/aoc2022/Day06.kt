@@ -3,7 +3,7 @@ package aoc2022
 import utils.*
 import java.rmi.UnexpectedException
 
-private class Day06(val lines: List<String>) {
+internal class Day06(val lines: List<String>) {
   init {
     lines.forEach { println(it) }
   }

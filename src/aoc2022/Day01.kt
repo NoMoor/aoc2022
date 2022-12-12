@@ -2,7 +2,7 @@ package aoc2022
 
 import utils.*
 
-private class Day01(lines: List<String>) {
+internal class Day01(lines: List<String>) {
   init { lines.forEach { println(it) } }
 
   val elves = lines.splitBy{ it.isEmpty() }.deepMap { it.toInt() }

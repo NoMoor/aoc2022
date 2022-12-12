@@ -1,7 +1,5 @@
 package utils
 
-import formatNanos
-
 class Stopwatch {
 
   private var startTime: Long? = null

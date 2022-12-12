@@ -6,113 +6,96 @@ import java.rmi.UnexpectedException
 import java.util.*
 
 private class Day12(val lines: List<String>) {
-
-  fun getHeight(c: Char) : Char {
-    if (c == 'S') {
-      return 'a'
-    } else if (c == 'E') {
-      return 'z'
+  /** Parse lines into a list of interconnected nodes. */
+  fun parseInput(filter: (a: Node, b: Node) -> Boolean): List<Node> {
+    // Create nodes
+    val nodes = lines.mapIndexed { r, row ->
+      row.mapIndexed { c, col ->
+        Node(Coord.rc(r, c), col)
+      }
     }
-    return c
+
+    // Map out neighbors
+    nodes.forEach { row ->
+      row.forEach { col ->
+        col.neighbors.addAll(
+          col.loc.neighborsBounded(row.size, nodes.size, "+")
+            .map { nodes[it] }
+            .filter { filter(col, it) }
+        )
+      }
+    }
+
+    return nodes.flatten()
   }
 
-  data class StepCount(val loc: Coord, val steps: Int) {}
+  data class Node(val loc: Coord, val char: Char) {
+    val neighbors = mutableListOf<Node>()
+    var minDistance = Int.MAX_VALUE
+
+    // Returns the height of this node.
+    fun height(): Int {
+      if (char == 'S') return 'a'.code
+      if (char == 'E') return 'z'.code
+      return char.code
+    }
+  }
 
   fun part1(): Any {
-    val heightMap = lines.map { it.toList() }.toList()
-    val minStepsToLoc = mutableMapOf<Coord, Int>()
-    val pq = PriorityQueue<StepCount>(compareBy { it.steps })
+    val nodes = parseInput { source, dest -> dest.height() - 1 <= source.height() }
+    val toVisit = PriorityQueue<Pair<Node, Int>>(compareBy { it.second })
 
-    val height = heightMap.size
-    val width = heightMap[0].size
+    toVisit.add(nodes.first { it.char == 'S' } to 0)
 
-    val start = find(heightMap, 'S')
-    pq.add(StepCount(start, 0))
-
-    while (pq.isNotEmpty()) {
-      val next = pq.poll()
+    while (toVisit.isNotEmpty()) {
+      val (curr, dist) = toVisit.poll()
 
       // We've been here before
-      if (minStepsToLoc[next.loc] != null) {
+      if (curr.minDistance <= dist) {
         continue
       } else {
-        // Mark this spot as visited.
-        minStepsToLoc[next.loc] = next.steps
+        curr.minDistance = dist
       }
 
       // Check if this is the end.
-      val c = heightMap[next.loc]
-      if (c == 'E') {
-        return next.steps
+      if (curr.char == 'E') {
+        return curr.minDistance
       }
 
-      val cHeight = getHeight(c)
-      val neighbors = next.loc
-        .neighborsBounded(0 until width, 0 until height, "+")
-
-      for (n in neighbors) {
-        val cnHeight = getHeight(heightMap[n])
-        if ((cnHeight.code - cHeight.code) <= 1) {
-          // We can go here
-          pq.add(StepCount(n, next.steps + 1))
-        }
-      }
+      // Add all the neighbors to visit at distance + 1
+      curr.neighbors.map { it to curr.minDistance + 1 }.forEach { toVisit.add(it) }
     }
 
     throw UnexpectedException("We didn't find an answer.")
   }
 
-  /** Finds the given character on the map. */
-  fun find(map: List<List<Char>>, char: Char): Coord {
-    map.indices.forEach { r ->
-      map[r].indices.forEach { c ->
-        if (map[r][c] == char) {
-          return Coord.rc(r, c)
-        }
-      }
-    }
-    throw UnexpectedException("Oops")
-  }
-
   fun part2(): Any {
-    val heightMap = lines.map { it.toList() }.toList()
-    val minStepsToLoc = mutableMapOf<Coord, Int>()
-    val pq = PriorityQueue<StepCount>(compareBy { it.steps })
+    // Swap source and dest in the filter to get the reverse traversal graph
+    val nodes = parseInput { dest, source -> dest.height() - 1 <= source.height() }
+    val toVisit = PriorityQueue<Pair<Node, Int>>(compareBy { it.second })
 
-    val height = heightMap.size
-    val width = heightMap[0].size
+    toVisit.add(nodes.first { it.char == 'E' } to 0)
 
-    val end = find(heightMap, 'E')
-    pq.add(StepCount(end, 0))
+    while (toVisit.isNotEmpty()) {
+      val (curr, dist) = toVisit.poll()
 
-    while (pq.isNotEmpty()) {
-      val curr = pq.poll()
-
-      // We've been here before
-      if (minStepsToLoc[curr.loc] != null) {
+      // We've been here before.
+      if (curr.minDistance <= dist) {
         continue
       } else {
-        minStepsToLoc[curr.loc] = curr.steps
+        curr.minDistance = dist
       }
 
       // Check if this is the end.
-      val currHeight = getHeight(heightMap[curr.loc])
-      if (currHeight == 'a') {
-        return curr.steps
+      if (curr.height() == 'a'.code) {
+        return curr.minDistance
       }
 
-      val neighbors = curr.loc
-        .neighborsBounded(0 until width, 0 until height, "+")
-
-      for (neighbor in neighbors) {
-        val neighborHeight = getHeight(heightMap[neighbor])
-        if ((neighborHeight.code - currHeight.code) >= -1) {
-          pq.add(StepCount(neighbor, curr.steps + 1))
-        }
-      }
+      // Add all the neighbors to visit at distance + 1
+      curr.neighbors.map { it to curr.minDistance + 1 }.forEach { toVisit.add(it) }
     }
 
-    throw UnexpectedException("Oops")
+    throw UnexpectedException("We didn't find an answer.")
   }
 }
 

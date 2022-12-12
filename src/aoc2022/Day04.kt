@@ -2,7 +2,7 @@ package aoc2022
 
 import utils.*
 
-private class Day04(lines: List<String>) {
+internal class Day04(lines: List<String>) {
   init { lines.forEach { println(it) } }
 
   private val lines = lines

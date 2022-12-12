@@ -44,7 +44,7 @@ data class Coord private constructor(val c: Int, val r: Int) {
   }
 
   fun neighborsBounded(width: Int, height: Int, spec: String = "o"): List<Coord> {
-    return neighborsBounded(0..width, 0..height, spec)
+    return neighborsBounded(0 until width, 0 until height, spec)
   }
 
   companion object {

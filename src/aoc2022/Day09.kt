@@ -2,7 +2,7 @@ import utils.*
 import java.rmi.UnexpectedException
 import kotlin.math.sign
 
-private class Day09(val lines: List<String>) {
+internal class Day09(val lines: List<String>) {
   init {
     lines.forEach { println(it) }
   }

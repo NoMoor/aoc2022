@@ -2,7 +2,7 @@ package aoc2022
 
 import utils.*
 
-private class Day05(val lines: List<String>) {
+internal class Day05(val lines: List<String>) {
   init { lines.forEach { println(it) } }
 
   fun part1(): String {

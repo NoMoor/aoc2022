@@ -3,7 +3,7 @@ package aoc2022
 import utils.*
 import java.rmi.UnexpectedException
 
-private class Day11(val lines: List<String>) {
+internal class Day11(val lines: List<String>) {
 
   /** Parse the input into a number of monkeys. */
   fun parseInputs(): Pair<List<Monkey>, Long> {

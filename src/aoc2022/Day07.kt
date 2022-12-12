@@ -2,7 +2,7 @@ package aoc2022
 
 import utils.*
 
-private class Day07(lines: List<String>) {
+internal class Day07(lines: List<String>) {
   data class Directory(var size: Long = 0, val name: String, val parent: Directory?) // Container to be able to change the value in dirs and path
 
   val dirs = mutableListOf<Directory>() // A list containing the sizes of all directories
