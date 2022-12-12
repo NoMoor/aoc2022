@@ -1,25 +1,23 @@
 package aoc2022
 
 import utils.*
-import utils.mapDeepIndexed
 import utils.Coord.Companion.get
-import utils.Coord.Companion.rc
-import java.rmi.UnexpectedException
 import java.util.*
 
 private class Day12(val lines: List<String>) {
-  /** Parse lines into a list of interconnected nodes. */
-  fun parseInput(filter: (a: Node, b: Node) -> Boolean): List<Node> {
-    // Create nodes
-    val nodes = lines.map { it.toList() }.mapDeepIndexed { r, c, value -> Node(rc( r, c), value) }
 
-    // Map out neighbors
+  private fun parseInput(filter: (Node, Node) -> Boolean): List<Node> {
+    val nodes = lines.map { it.toList() }.mapIndexed { r, row ->
+      row.mapIndexed { c, value ->
+        Node(r, c, value)
+      }
+    }
+
     nodes.forEach { row ->
       row.forEach { node ->
-        node.neighbors.addAll(
-          node.loc.neighborsBounded(row.size, nodes.size, "+")
-            .map { nodes[it] }
-            .filter { neighbor -> filter(node, neighbor) }
+        node.edges.addAll(node.loc.neighborsBounded(row.size, nodes.size, "+")
+          .map { neighbor -> nodes[neighbor] }
+          .filter { neighbor -> filter(node, neighbor) }
         )
       }
     }
@@ -27,73 +25,65 @@ private class Day12(val lines: List<String>) {
     return nodes.flatten()
   }
 
-  data class Node(val loc: Coord, val char: Char) {
-    val neighbors = mutableListOf<Node>()
-    var minDistance = Int.MAX_VALUE
+  fun part1(): Any? {
+    val nodes = parseInput { node, neighbor -> neighbor.height() - 1 <= node.height() }
+    val pq = PriorityQueue<Pair<Node, Int>>(compareBy { it.second })
+    val distances = mutableMapOf<Node, Int>()
+    pq.add(nodes.first { it.value == 'S' } to 0)
 
-    // Returns the height of this node.
-    fun height(): Int {
-      if (char == 'S') return 'a'.code
-      if (char == 'E') return 'z'.code
-      return char.code
+    while (pq.isNotEmpty()) {
+      val (node, dist) = pq.poll()
+
+      if (distances.getOrDefault(node, Int.MAX_VALUE) <= dist) {
+        continue
+      }
+      distances[node] = dist
+
+      if (node.value == 'E') {
+        return dist
+      }
+
+      pq.addAll(node.edges.map { it to dist + 1 })
     }
+
+    return null
   }
 
-  fun part1(): Any {
-    val nodes = parseInput { source, dest -> dest.height() - 1 <= source.height() }
-    val toVisit = PriorityQueue<Pair<Node, Int>>(compareBy { it.second })
+  fun part2(): Any? {
+    val nodes = parseInput { neighbor, node -> neighbor.height() - 1 <= node.height() }
+    val pq = PriorityQueue<Pair<Node, Int>>(compareBy { it.second })
+    val distances = mutableMapOf<Node, Int>()
+    pq.add(nodes.first { it.value == 'E' } to 0)
 
-    toVisit.add(nodes.first { it.char == 'S' } to 0)
+    while (pq.isNotEmpty()) {
+      val (node, dist) = pq.poll()
 
-    while (toVisit.isNotEmpty()) {
-      val (curr, dist) = toVisit.poll()
-
-      // We've been here before
-      if (curr.minDistance <= dist) {
+      if (distances.getOrDefault(node, Int.MAX_VALUE) <= dist) {
         continue
-      } else {
-        curr.minDistance = dist
+      }
+      distances[node] = dist
+
+      if (node.height() == 'a'.code) {
+        return dist
       }
 
-      // Check if this is the end.
-      if (curr.char == 'E') {
-        return curr.minDistance
-      }
-
-      // Add all the neighbors to visit at distance + 1
-      curr.neighbors.map { it to curr.minDistance + 1 }.forEach { toVisit.add(it) }
+      pq.addAll(node.edges.map { it to dist + 1 })
     }
 
-    throw UnexpectedException("We didn't find an answer.")
+    return null
   }
+}
 
-  fun part2(): Any {
-    // Swap source and dest in the filter to get the reverse traversal graph
-    val nodes = parseInput { dest, source -> dest.height() - 1 <= source.height() }
-    val toVisit = PriorityQueue<Pair<Node, Int>>(compareBy { it.second })
+data class Node(val r: Int, val c: Int, val value: Char) {
+  val loc = Coord.rc(r, c)
+  val edges = mutableListOf<Node>()
 
-    toVisit.add(nodes.first { it.char == 'E' } to 0)
-
-    while (toVisit.isNotEmpty()) {
-      val (curr, dist) = toVisit.poll()
-
-      // We've been here before.
-      if (curr.minDistance <= dist) {
-        continue
-      } else {
-        curr.minDistance = dist
-      }
-
-      // Check if this is the end.
-      if (curr.height() == 'a'.code) {
-        return curr.minDistance
-      }
-
-      // Add all the neighbors to visit at distance + 1
-      curr.neighbors.map { it to curr.minDistance + 1 }.forEach { toVisit.add(it) }
+  fun height(): Int {
+    return when (value) {
+      'S' -> 'a'.code
+      'E' -> 'z'.code
+      else -> value.code
     }
-
-    throw UnexpectedException("We didn't find an answer.")
   }
 }
 

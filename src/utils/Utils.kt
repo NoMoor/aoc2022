@@ -56,10 +56,19 @@ fun String.md5(): String = BigInteger(1, MessageDigest.getInstance("MD5").digest
   .toString(16)
 
 fun execute(c: Callable<Any>, label: String = "", expectedAnswer: Any = "") {
-  println("\n************* Start $label *************")
+  val openHeader = "************* Start $label *************"
+  print(openHeader)
 
-  var result: Any
+  var result: Any?
   val nanos = measureNanoTime { result = c.call() }
+
+  if (result == null) {
+    val deleteOpenHeader = openHeader.map { Char(8) }.joinToString("")
+    print(deleteOpenHeader)
+    return
+  } else {
+    println()
+  }
 
   println("Executed in ${formatNanos(nanos)}")
   println()
@@ -70,7 +79,7 @@ fun execute(c: Callable<Any>, label: String = "", expectedAnswer: Any = "") {
     println("$result")
   } else {
     println("${if (label.isNotEmpty()) "`$label` " else ""} Result: \n$result")
-    copyToClipboard(result)
+    copyToClipboard(result!!)
   }
 
   println()
