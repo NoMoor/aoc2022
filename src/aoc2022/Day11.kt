@@ -8,14 +8,12 @@ private class Day11(val lines: List<String>) {
       // Map the list of lines to a monkey.
       .map {
         val monkeyNum = it[0].split(" ")[1].removeSuffix(":").toLong()
-        val startingItems = it[1].split(": ").last().split(", ").map { it.toLong() }
+        val startingItems = it[1].split(": ").last().split(", ").map { it.toLong() }.toMutableList()
         val (op, second) = it[2].split("=")[1].removePrefix(" old ").split(" ")
         val divisor = it[3].split(" ").last().toLong()
         val trueMonkey = it[4].split(" ").last().toInt()
         val falseMonkey = it[5].split(" ").last().toInt()
-        val m = Monkey(monkeyNum, op, second, divisor, trueMonkey, falseMonkey)
-        m.items.addAll(startingItems)
-        m
+        Monkey(monkeyNum, startingItems, op, second, divisor, trueMonkey, falseMonkey)
       }.toList()
 
     // Get the least common multiple of the test divisors to keep the total worry down.
@@ -86,15 +84,15 @@ private class Day11(val lines: List<String>) {
     }
   }
 
-  data class Monkey(
+  class Monkey(
     val id: Long,
+    val items: MutableList<Long>,
     val op: String,
     val op2: String,
     val testDivisor: Long,
     val trueMonkey: Int,
     val falseMonkey: Int) {
 
-    val items = mutableListOf<Long>()
     var inspectionCount = 0L
   }
 }

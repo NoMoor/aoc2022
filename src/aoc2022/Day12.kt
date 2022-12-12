@@ -1,4 +1,5 @@
 import utils.Coord
+import utils.Coord.Companion.get
 import java.rmi.UnexpectedException
 import java.util.*
 
@@ -14,10 +15,6 @@ private class Day12(val lines: List<String>) {
   }
 
   data class StepCount(val loc: Coord, val steps: Int) {}
-
-  operator fun <E> List<List<E>>.get(c: Coord) : E {
-    return this[c.r][c.c]
-  }
 
   fun part1(): Any {
     val heightMap = lines.map { it.toList() }.toList()

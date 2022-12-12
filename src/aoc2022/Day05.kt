@@ -22,7 +22,7 @@ class Day05(val lines: List<String>) {
       }
 
     moves.forEach { m ->
-      val (num, s, d) = m.allInts()
+      val (num, s, d) = m.split(" ").filter { it[0].isDigit() }.map { it.toInt() }
       stacks[d - 1].addAll(stacks[s - 1].removeLast(num).reversed())
     }
 

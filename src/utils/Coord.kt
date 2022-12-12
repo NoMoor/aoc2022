@@ -52,17 +52,16 @@ data class Coord(val c: Int, val r: Int) {
     val RIGHT = Coord(1, 0)
     val UP = Coord(0, 1)
     val DOWN = Coord(0, -1)
+
+    operator fun <E> List<List<E>>.get(c: Coord) : E {
+      return this[c.r][c.c]
+    }
+
+    operator fun Pair<Coord, Coord>.contains(o: Coord) : Boolean {
+      val xRange = if (first.c <= second.c) (first.c..second.c) else (second.c..first.c)
+      val yRange = if (first.r <= second.r) (first.r..second.r) else (second.r..first.r)
+
+      return o.c in xRange && o.r in yRange
+    }
   }
-
-}
-
-operator fun Pair<Coord, Coord>.contains(o: Coord) : Boolean {
-  val xRange = if (first.c <= second.c) (first.c..second.c) else (second.c..first.c)
-  val yRange = if (first.r <= second.r) (first.r..second.r) else (second.r..first.r)
-
-  return o.c in xRange && o.r in yRange
-}
-
-operator fun <E> List<List<E>>.get(c: Coord) : E {
-  return this[c.r][c.c]
 }
