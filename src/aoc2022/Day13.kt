@@ -3,13 +3,17 @@
 package aoc2022
 
 import utils.*
+import java.rmi.UnexpectedException
 import kotlin.math.min
 
 private class Day13(val lines: List<String>) {
 
   val pairs = lines.splitBy { it == "" }
-    .map { parse(it[0].iterator()) to parse(it[1].iterator()) }
-    .map { it.first[0] to it.second[0] }
+    .map { parse(it[0]) to parse(it[1]) }
+
+  private fun parse(s: String): List<Any> {
+    return parse(s.removePrefix("[").iterator())
+  }
 
   private fun parse(s: Iterator<Char>): List<Any> {
     val list = mutableListOf<Any>()
@@ -33,7 +37,8 @@ private class Day13(val lines: List<String>) {
       }
     }
 
-    return list
+    println(list)
+    throw UnexpectedException("Should not run out of string.")
   }
 
   fun compareList(a: List<Any>, b: List<Any>) : Boolean? {
