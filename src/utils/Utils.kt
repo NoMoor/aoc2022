@@ -19,12 +19,12 @@ const val defaultText = "100"
 /**
  * Reads lines from the given input txt file.
  */
-fun readInput(dayNum: Int, year: Int, test: Boolean = false, testIndex: Int = 0): List<String> {
+fun readInput(dayNum: Int, year: Int, test: Boolean = false, inputIndex: Int = 0): List<String> {
   val paddedDay = dayNum.toString().padStart(2, '0')
   val fileName = if (test) {
-    if (testIndex == 0) "Day${paddedDay}_test.txt" else "Day${paddedDay}_test$testIndex.txt"
+    if (inputIndex == 0) "Day${paddedDay}_test.txt" else "Day${paddedDay}_test$inputIndex.txt"
   } else {
-    "Day${paddedDay}.txt"
+    if (inputIndex == 0) "Day${paddedDay}.txt" else "Day${paddedDay}_$inputIndex.txt"
   }
   val file = File(Path("src", "aoc$year").toFile(), fileName)
 
