@@ -8,87 +8,95 @@ import kotlin.math.min
 
 private class Day13(val lines: List<String>) {
 
-  val pairs = lines.splitBy { it == "" }
-    .map { parse(it[0]) to parse(it[1]) }
+  val pairs = lines.filter { it.isNotEmpty() }
+    .map { parseList(it).first }
 
-  private fun parse(s: String): List<Any> {
-    return parse(s.removePrefix("[").iterator())
-  }
+  /**
+   * Recursively parses a list where each element is a sub-list or an int.
+   *
+   * Returns the first list encountered and the remainder of the unparsed string.
+   *
+   * Example: [4, [2], 2] -> a list of 3 elements and ""
+   * Example: [2], 2] -> a list of one element [2] and ", 2]" as the unparsed string.
+   */
+  private fun parseList(input: String): Pair<List<Any>, String> {
 
-  private fun parse(s: Iterator<Char>): List<Any> {
+    var currS = input
     val list = mutableListOf<Any>()
-    while (s.hasNext()) {
-      var c = s.next()
 
-      if (c == '[') {
-        list.add(parse(s))
-      } else if (c.isDigit()) {
-        var num = ""
-        while (c.isDigit()) {
-          num += c
-          c = s.next()
+    assert(input.startsWith("["))
+    currS = currS.removePrefix("[")
+
+    // Go until we hit the end of this list.
+    // Nested lists are handled by the parse sublist branch so we know
+    // when this loop hits end bracket that this is the end of this lis.
+    while (currS.first() != ']') {
+      when {
+        // Parse separator
+        currS.first() == ',' -> {
+          currS = currS.substring(1)
         }
-        list.add(num.toInt())
-        // c is either , or ]
-      }
 
-      if (c == ']') {
-        return list
+        // Parse number
+        currS.first().isDigit() -> {
+          val numS = currS.takeWhile { it !in setOf(',', ']') }
+          list.add(numS.toInt())
+          currS = currS.substring(numS.length)
+        }
+
+        // Parse sublist
+        currS.first() == '[' -> {
+          val (sublistElement, unparsedString) = parseList(currS)
+          list.add(sublistElement)
+          currS = unparsedString
+        }
+        else -> throw UnexpectedException("oops")
       }
     }
 
-    println(list)
-    throw UnexpectedException("Should not run out of string.")
+    assert(input.startsWith("["))
+    currS = currS.removePrefix("]")
+
+    return list to currS
   }
 
-  fun compareList(a: List<Any>, b: List<Any>) : Boolean? {
+  fun compare(a: List<Any>, b: List<Any>): Int {
     for (i in 0 until min(a.size, b.size)) {
       val firstItem = a[i]
       val secondItem = b[i]
 
-      if (firstItem is Int && secondItem is Int) {
-        if (firstItem != secondItem) {
-          return firstItem < secondItem
-        }
-        continue
+      val result = if (firstItem is Int && secondItem is Int) {
+        compareValues(firstItem, secondItem)
+      } else {
+        val firstList = if (firstItem is Int) listOf(firstItem) else firstItem
+        val secondList = if (secondItem is Int) listOf(secondItem) else secondItem
+        compare(firstList as List<Any>, secondList as List<Any>)
       }
 
-      val firstList = if (firstItem is Int) listOf(firstItem) else firstItem
-      val secondList = if (secondItem is Int) listOf(secondItem) else secondItem
-      val result = compareList(firstList as List<Any>, secondList as List<Any>)
-      if (result != null) {
+      if (result != 0) {
         return result
       }
     }
 
-    if (a.size == b.size) {
-      return null
-    }
-
-    return a.size < b.size
+    return compareValues(a.size, b.size)
   }
 
   fun part1(): Int {
-
-    val correctIndices = mutableListOf<Int>()
-    pairs.forEachIndexed { index, it ->
-      val result = compareList(it.first as List<Any>, it.second as List<Any>)
-      if (result!!) {
-        correctIndices.add(index + 1)
-      }
-    }
-    return correctIndices.sum()
+    return pairs
+      .chunked(2)
+      .mapIndexed { index, it ->
+        if (compare(it[0], it[1]) < 0) index + 1 else 0
+      }.sum()
   }
 
   fun part2(): Int {
-    val sortedList = pairs.flatMap { it.toList() }.sortedWith {
-      a, b -> if (compareList(a as List<Any>, b as List<Any>)!!) -1  else 1
-    }
-
-    val index1 = sortedList.indexOfFirst { it.toString() == "[[6]]" }
-    val index2 = sortedList.indexOfFirst { it.toString() == "[[2]]" }
-
-    return (index1 + 1) * (index2 + 1)
+    return pairs
+      .sortedWith { a, b ->
+        compare(a as List<Any>, b as List<Any>)
+      }.mapIndexed { index, it ->
+        // Keep indexes of the two elements
+        if (it.toString() in setOf("[[2]]", "[[6]]")) index + 1 else 1
+      }.reduce { a, b -> a * b } // Compute the product of the list.
   }
 }
 
