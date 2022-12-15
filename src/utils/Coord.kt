@@ -2,7 +2,7 @@ package utils
 
 data class Coord private constructor(val c: Int, val r: Int) {
   val x = c
-  val y = c
+  val y = r
 
   private constructor(p: Pair<Int, Int>) : this(p.first, p.second)
 
@@ -66,6 +66,10 @@ data class Coord private constructor(val c: Int, val r: Int) {
 
     operator fun <E> List<List<E>>.get(c: Coord) : E {
       return this[c.r][c.c]
+    }
+
+    operator fun <E> MutableList<MutableList<E>>.set(c: Coord, e: E) {
+      this[c.r][c.c] = e
     }
 
     operator fun Pair<Coord, Coord>.contains(o: Coord) : Boolean {

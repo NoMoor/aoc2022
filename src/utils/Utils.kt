@@ -85,6 +85,29 @@ fun execute(c: Callable<Any>, label: String = "", expectedAnswer: Any = "") {
   println()
 }
 
+fun <T> Iterable<T>.debug(): Iterable<T> {
+  this.forEach { println(it) }
+  return this
+}
+
+fun <T> T.debug(): T {
+  println(this)
+  return this
+}
+
+fun IntRange.remove(notHereRange: IntRange) : List<IntRange> {
+  if (notHereRange.last < this.first || this.last < notHereRange.first) {
+    return listOf(this)
+  } else if (notHereRange.first <= this.first && this.last <= notHereRange.last) {
+    return listOf()
+  }
+
+  val range1 = this.first until notHereRange.first
+  val range2 = notHereRange.last + 1 .. this.last
+
+  return listOf(range1, range2).filter { !it.isEmpty() }
+}
+
 fun formatNanos(n: Long) : String {
   return if (n < 900_000) {
     "$n ns"
