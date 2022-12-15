@@ -85,13 +85,12 @@ fun execute(c: Callable<Any>, label: String = "", expectedAnswer: Any = "") {
   println()
 }
 
-fun <T> Iterable<T>.debug(): Iterable<T> {
-  this.forEach { println(it) }
-  return this
-}
-
 fun <T> T.debug(): T {
-  println(this)
+  if (this is Iterable<*>) {
+    this.forEach { println(it) }
+  } else {
+    println(this)
+  }
   return this
 }
 
@@ -106,6 +105,14 @@ fun IntRange.remove(notHereRange: IntRange) : List<IntRange> {
   val range2 = notHereRange.last + 1 .. this.last
 
   return listOf(range1, range2).filter { !it.isEmpty() }
+}
+
+fun IntRange.contains(b: IntRange): Boolean {
+  return this.first <= b.first && b.last <= this.last
+}
+
+fun IntRange.overlaps(b: IntRange): Boolean {
+  return this.contains(b.first) || this.contains(b.last) || b.contains(this.first)
 }
 
 fun formatNanos(n: Long) : String {
