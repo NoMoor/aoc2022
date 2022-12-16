@@ -93,26 +93,14 @@ private class Day16(val lines: List<String>) {
     val turnNum: Int,
     val currentRoom: Room,
     val openValves: Set<String>,
-  ) {
-    var score: Long = 0
-  }
-
-  var bestResultYet: State = State(1, roomMap.get("AA")!!, setOf())
+  )
 
   fun part1(): Long {
-    val state = State(1, roomMap.get("AA")!!, setOf())
+    val state = State(0, roomMap.get("AA")!!, setOf())
 
-    val result = state.currentRoom.paths.map { moveTo(it, state) }.max()
+    val result = state.currentRoom.paths.map { moveTo(it, state, 0) }.max()
 
     return result
-  }
-
-  private fun recordBest(state: State): State {
-    if (state.score > bestResultYet.score) {
-      bestResultYet = state
-      println("New Best: $bestResultYet")
-    }
-    return state
   }
 
   /**
@@ -121,12 +109,12 @@ private class Day16(val lines: List<String>) {
    *
    * Return the max result we've found
    */
-  private fun moveTo(edge: Edge, prevState: State): Long {
+  private fun moveTo(edge: Edge, prevState: State, score: Long): Long {
     // Move and score the valid minutes
     val location = roomMap.get(edge.destination)!!
-    val turn = prevState.turnNum + edge.weight + 1
+    var turn = prevState.turnNum + edge.weight + 1
     if (turn >= 30) {
-      return 0
+      return score
     }
 
     // Turn it on
@@ -134,22 +122,20 @@ private class Day16(val lines: List<String>) {
     openValves.add(location.name)
     val addedScore = location.rate * (30 - turn)
     val newState = prevState.copy(turnNum = turn, currentRoom = location, openValves=openValves)
-    newState.score = prevState.score + addedScore
 
     if (cache.containsKey(newState)) {
-      println("Hit cache")
       return cache[newState]!!
     }
 
     var bestPath = location.paths
       .filter { !newState.openValves.contains(it.destination) }
-      .map { moveTo(it, newState) }
+      .map { moveTo(it, newState, score + addedScore) }
       .maxOrNull()
     if (bestPath == null) {
       bestPath = 0
     }
 
-    val maxScore = max(newState.score, bestPath)
+    val maxScore = max(score + addedScore, bestPath)
     cache[newState] = maxScore
     return maxScore
   }
@@ -163,7 +149,7 @@ fun main() {
   val day = "16".toInt()
 
   val todayTest = Day16(readInput(day, 2022, true))
-  execute(todayTest::part1, "Day[Test] $day: pt 1")
+  execute(todayTest::part1, "Day[Test] $day: pt 1", 1651)
 
 //  val today = Day16(readInput(day, 2022))
 //  execute(today::part1, "Day $day: pt 1")
