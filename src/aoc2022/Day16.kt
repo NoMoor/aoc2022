@@ -2,146 +2,133 @@ package aoc2022
 
 import utils.*
 import java.util.*
-import kotlin.math.max
+
+private const val STARTING_ROOM = "AA"
 
 private class Day16(val lines: List<String>) {
 
-  var roomsWithValves = lines.map {
-    val (a, b) = it.split(";")
-    val name = a.split(" ")[1]
-    val flow = a.split("=")[1].toLong()
-    val edges = b.split("valve")[1]
-      .removePrefix("s")
-      .removePrefix(" ")
-      .split(", ")
-      .map { Edge(it, 1) }
-    val r = Room(name, flow)
-    r.paths.addAll(edges)
-    r
-  }.toMutableList()
-
-  var roomMap = roomsWithValves.associateBy { it.name }
-
+  var roomMap: Map<String, Room>
+  val sparseEdges: Map<String, List<Edge>>
   val cache = mutableMapOf<State, Long>()
 
   init {
-//    val deadRooms = roomsWithValves.filter { it.rate == 0L }.filter { it.name != "AA" }.toList()
-//    deadRooms.forEach { r ->
-//      val source = roomsWithValves.first { it.name == r.paths[0].destination }
-//      val destination = roomsWithValves.first { it.name == r.paths[1].destination }
-//
-//      val sourceEdge = source.paths.find { it.destination == r.name }!!
-//      source.paths.remove(sourceEdge)
-//      source.paths.add(Edge(destination.name, sourceEdge.weight + 1))
-//
-//      val destinationEdge = destination.paths.find { it.destination == r.name }!!
-//      destination.paths.remove(destinationEdge)
-//      destination.paths.add(Edge(source.name, destinationEdge.weight + 1))
-//
-//      roomsWithValves.remove(r)
-//    }
+    val denseEdges = mutableMapOf<String, List<Edge>>()
+    val denseRooms = lines.map {
+      val (a, b) = it.split(";")
+      val name = a.split(" ")[1]
+      val flow = a.split("=")[1].toLong()
+      val edges = b.split("valve")[1]
+        .removePrefix("s")
+        .removePrefix(" ")
+        .split(", ")
+        .map { Edge(it, 1) }
+
+      denseEdges.put(name, edges)
+
+      Room(name, flow)
+    }
+
+    roomMap = denseRooms.filter { it.rate >= 0 || it.name == STARTING_ROOM }.associateBy { it.name }
 
     // Make paths from every room to every other room
-    roomsWithValves.forEach { r ->
-      // Create spanning tree for this room
-      val shortestPath = mutableMapOf<String, Int>()
-      val stack = PriorityQueue<Pair<String, Int>>(compareBy { it.second } ) // PQ
-      stack.add(r.name to 0)
+    sparseEdges = denseRooms.associate { r ->
+      val shortestPath = computeSparseEdges(r, denseEdges)
 
-      while (stack.isNotEmpty()) {
-        // grab
-        val next = stack.poll()
-        val nextRoom = roomMap[next.first]!!
-        // increment
-        val distance = next.second
-
-        // check
-        if (shortestPath.containsKey(next.first) && shortestPath[next.first]!! <= distance) {
-          continue
-        }
-
-        shortestPath[next.first] = next.second
-
-        // add neighbors
-        nextRoom.paths.forEach { stack.add(it.destination to next.second + 1) }
-      }
-
-      r.paths.clear()
-      shortestPath
-        .filter { it.key != r.name }
+      r.name to shortestPath
+        .filter { r.name != it.key }
         .filter { roomMap[it.key]!!.rate > 0 }
-        .forEach { r.paths.add(Edge(it.key, it.value))}
-    }
-//
-//    roomsWithValves.forEach { it.paths.sortByDescending {
-//      roomMap[it.destination]!!.rate / (it.weight + 1)
-//    } }
-    roomsWithValves.debug()
-  }
-
-  data class Room(val name: String, val rate: Long) {
-    val paths = mutableListOf<Edge>()
-
-    override fun toString(): String {
-      return "$name $rate $paths"
+        .map { Edge(it.key, it.value) }
     }
   }
 
-  data class Edge(val destination: String, val weight: Int)
+  private fun computeSparseEdges(r: Room, denseEdges: Map<String, List<Edge>>): Map<String, Int> {
+    // Create spanning tree for this room
+    val shortestPath = mutableMapOf<String, Int>()
+    val stack = PriorityQueue<Pair<String, Int>>(compareBy { it.second }) // PQ
+    stack.add(r.name to 0)
+
+    while (stack.isNotEmpty()) {
+      val (name, distance) = stack.poll()
+
+      // check
+      if (shortestPath.containsKey(name) && shortestPath[name]!! <= distance) {
+        continue
+      }
+      shortestPath[name] = distance
+
+      stack.addAll(denseEdges[name]!!.map { it.dest to distance + 1 })
+    }
+    return shortestPath
+  }
+
+  data class Room(val name: String, val rate: Long)
+  data class Edge(val dest: String, val weight: Int)
 
   data class State(
-    val turnNum: Int,
-    val currentRoom: Room,
+    val minute: Int,
+    val location: Room,
     val openValves: Set<String>,
+    val isEle: Boolean = false,
+    val isPt2: Boolean = false
   )
 
   fun part1(): Long {
-    val state = State(0, roomMap.get("AA")!!, setOf())
+    cache.clear()
+    val state = State(0, roomMap.get(STARTING_ROOM)!!, setOf())
+    return sparseEdges[state.location.name]!!.maxOfOrNull { goto(it, state, 30) }!!
+  }
 
-    val result = state.currentRoom.paths.map { moveTo(it, state, 0) }.max()
-
-    return result
+  fun part2(): Long {
+    cache.clear()
+    val state = State(0, roomMap[STARTING_ROOM]!!, setOf(), isPt2 = true)
+    return sparseEdges[state.location.name]!!.maxOfOrNull { goto(it, state, 26) }!!
   }
 
   /**
-   * MOve to traverse the edge. Traversing takes n minutes. Score the ones before 30.
-   * Then turn on the hose thing and score that. Then move more?
+   * Traverse the edge taking n minutes. If there is time, turn the valve and score those points.
    *
-   * Return the max result we've found
+   * Return the max pressure you can release after this state. This only includes valves opened after this state.
+   * The total pressure released for a volve is counted on the round it is open.
    */
-  private fun moveTo(edge: Edge, prevState: State, score: Long): Long {
-    // Move and score the valid minutes
-    val location = roomMap.get(edge.destination)!!
-    var turn = prevState.turnNum + edge.weight + 1
-    if (turn >= 30) {
-      return score
+  private fun goto(edge: Edge, prevState: State, totalMinutes: Int): Long {
+    // Move to the new location
+    val loc = roomMap.get(edge.dest)!!
+    // Put us on turn + traversal time + 1 turn to turn on the valve.
+    // We can check the turn to change the valve now because if we don't have time to turn it, we can't score
+    // any more points.
+    val currentMinute = prevState.minute + edge.weight + 1
+
+    if (currentMinute >= totalMinutes && prevState.isPt2 && !prevState.isEle) {
+      // Once we've taken all our turns, Let the elephant take all its turns.
+      val eleState = prevState.copy(minute = 0, location = roomMap[STARTING_ROOM]!!, isEle = true)
+      val max = sparseEdges[eleState.location.name]!!.filter { it.dest !in prevState.openValves }
+        .map { goto(it, eleState, totalMinutes) }
+        .max()
+
+      return max
+    } else if (currentMinute >= totalMinutes) {
+      return 0L
     }
 
     // Turn it on
-    val openValves = prevState.openValves.toMutableSet()
-    openValves.add(location.name)
-    val addedScore = location.rate * (30 - turn)
-    val newState = prevState.copy(turnNum = turn, currentRoom = location, openValves=openValves)
+    val openValves = buildSet { addAll(prevState.openValves); add(loc.name) }
+    val pressureReleasedThisTurn = loc.rate * (totalMinutes - currentMinute)
+
+    val newState = prevState.copy(minute = currentMinute, location = loc, openValves=openValves)
 
     if (cache.containsKey(newState)) {
       return cache[newState]!!
     }
 
-    var bestPath = location.paths
-      .filter { !newState.openValves.contains(it.destination) }
-      .map { moveTo(it, newState, score + addedScore) }
-      .maxOrNull()
-    if (bestPath == null) {
-      bestPath = 0
-    }
+    val maxPressureReleasedAfterThisTurn = sparseEdges[newState.location.name]!!
+      .filter { !newState.openValves.contains(it.dest) }
+      .map { goto(it, newState, totalMinutes) }
+      .maxOrNull() ?: 0L
 
-    val maxScore = max(score + addedScore, bestPath)
-    cache[newState] = maxScore
-    return maxScore
-  }
+    val maxPressureReleased = maxPressureReleasedAfterThisTurn + pressureReleasedThisTurn
+    cache[newState] = maxPressureReleased
 
-  fun part2(): Any? {
-    return lines.size
+    return maxPressureReleased
   }
 }
 
@@ -149,11 +136,11 @@ fun main() {
   val day = "16".toInt()
 
   val todayTest = Day16(readInput(day, 2022, true))
-  execute(todayTest::part1, "Day[Test] $day: pt 1", 1651)
+  execute(todayTest::part1, "Day[Test] $day: pt 1", 1651L)
 
-//  val today = Day16(readInput(day, 2022))
-//  execute(today::part1, "Day $day: pt 1")
+  val today = Day16(readInput(day, 2022))
+  execute(today::part1, "Day $day: pt 1")
 
-  // execute(todayTest::part2, "Day[Test] $day: pt 2")
-  // execute(today::part2, "Day $day: pt 2")
+//   execute(todayTest::part2, "Day[Test] $day: pt 2")
+   execute(today::part2, "Day $day: pt 2", 2838L)
 }
