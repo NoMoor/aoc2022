@@ -1,6 +1,8 @@
 package aoc2022
 
 import utils.*
+import java.util.*
+import kotlin.math.max
 
 private class Day16(val lines: List<String>) {
 
@@ -18,9 +20,9 @@ private class Day16(val lines: List<String>) {
     r
   }.toMutableList()
 
-  var roomMap: Map<String, Room>
+  var roomMap = roomsWithValves.associateBy { it.name }
 
-  val cache = mutableMapOf<State, State>()
+  val cache = mutableMapOf<State, Long>()
 
   init {
 //    val deadRooms = roomsWithValves.filter { it.rate == 0L }.filter { it.name != "AA" }.toList()
@@ -39,11 +41,41 @@ private class Day16(val lines: List<String>) {
 //      roomsWithValves.remove(r)
 //    }
 
-    roomMap = roomsWithValves.associateBy { it.name }
+    // Make paths from every room to every other room
+    roomsWithValves.forEach { r ->
+      // Create spanning tree for this room
+      val shortestPath = mutableMapOf<String, Int>()
+      val stack = PriorityQueue<Pair<String, Int>>(compareBy { it.second } ) // PQ
+      stack.add(r.name to 0)
 
-    roomsWithValves.forEach { it.paths.sortByDescending {
-      roomMap[it.destination]!!.rate / (it.weight + 1)
-    } }
+      while (stack.isNotEmpty()) {
+        // grab
+        val next = stack.poll()
+        val nextRoom = roomMap[next.first]!!
+        // increment
+        val distance = next.second
+
+        // check
+        if (shortestPath.containsKey(next.first) && shortestPath[next.first]!! <= distance) {
+          continue
+        }
+
+        shortestPath[next.first] = next.second
+
+        // add neighbors
+        nextRoom.paths.forEach { stack.add(it.destination to next.second + 1) }
+      }
+
+      r.paths.clear()
+      shortestPath
+        .filter { it.key != r.name }
+        .filter { roomMap[it.key]!!.rate > 0 }
+        .forEach { r.paths.add(Edge(it.key, it.value))}
+    }
+//
+//    roomsWithValves.forEach { it.paths.sortByDescending {
+//      roomMap[it.destination]!!.rate / (it.weight + 1)
+//    } }
     roomsWithValves.debug()
   }
 
@@ -60,110 +92,66 @@ private class Day16(val lines: List<String>) {
   data class State(
     val turnNum: Int,
     val currentRoom: Room,
-    val openValves: Map<String, Long>,
+    val openValves: Set<String>,
   ) {
-    var bestScore: Long = 0
+    var score: Long = 0
   }
 
-  var count = 0L
-  var bestResultYet: State = State(1, roomMap.get("AA")!!, mapOf())
+  var bestResultYet: State = State(1, roomMap.get("AA")!!, setOf())
 
   fun part1(): Long {
-    val state = State(1, roomMap.get("AA")!!, mapOf())
+    val state = State(1, roomMap.get("AA")!!, setOf())
 
-    val result = state.currentRoom.paths.map { moveTo(it, state) }.maxBy { it.bestScore }
+    val result = state.currentRoom.paths.map { moveTo(it, state) }.max()
 
-    println(result)
-
-    return result.bestScore
+    return result
   }
 
   private fun recordBest(state: State): State {
-    if (state.bestScore > bestResultYet.bestScore) {
+    if (state.score > bestResultYet.score) {
       bestResultYet = state
       println("New Best: $bestResultYet")
     }
     return state
   }
 
-  private fun moveTo(edge: Edge, state: State): State {
+  /**
+   * MOve to traverse the edge. Traversing takes n minutes. Score the ones before 30.
+   * Then turn on the hose thing and score that. Then move more?
+   *
+   * Return the max result we've found
+   */
+  private fun moveTo(edge: Edge, prevState: State): Long {
+    // Move and score the valid minutes
     val location = roomMap.get(edge.destination)!!
-    val turn = state.turnNum + 1
-//    val scoredTurns = if (turn > 30) (edge.weight - (turn - 30)) else edge.weight
-
-    val currentScore = state.bestScore + (state.openValves.values.sum())
+    val turn = prevState.turnNum + edge.weight + 1
     if (turn >= 30) {
-      val returnVal = state.copy(turnNum = turn)
-      returnVal.bestScore = currentScore
-      return recordBest(returnVal)
+      return 0
     }
 
-    val newState = state.copy(turnNum = turn, currentRoom = location)
-    newState.bestScore = currentScore
+    // Turn it on
+    val openValves = prevState.openValves.toMutableSet()
+    openValves.add(location.name)
+    val addedScore = location.rate * (30 - turn)
+    val newState = prevState.copy(turnNum = turn, currentRoom = location, openValves=openValves)
+    newState.score = prevState.score + addedScore
+
     if (cache.containsKey(newState)) {
       println("Hit cache")
       return cache[newState]!!
     }
 
-    var bestState = newState
-
-    if (location.rate > 0 && !state.openValves.containsKey(location.name)) {
-      val pathState = openValve(newState)
-      if (pathState.bestScore > bestState.bestScore) bestState = pathState
+    var bestPath = location.paths
+      .filter { !newState.openValves.contains(it.destination) }
+      .map { moveTo(it, newState) }
+      .maxOrNull()
+    if (bestPath == null) {
+      bestPath = 0
     }
 
-    for (p in location.paths.filter { !state.openValves.containsKey(it.destination) }) {
-      val pathState = moveTo(p, newState)
-      if (pathState.bestScore > bestState.bestScore) bestState = pathState
-    }
-
-    val turnsLeft = 30 - turn
-    val idleScore = currentScore + (turnsLeft * newState.openValves.values.sum())
-    if (idleScore > bestState.bestScore) {
-      bestState = newState.copy(turnNum = 30)
-      bestState.bestScore = idleScore
-    }
-
-    cache[newState] = bestState
-    return recordBest(bestState)
-  }
-
-  private fun openValve(state: State): State {
-    val turn = state.turnNum + 1
-    val openValves = state.openValves.toMutableMap()
-    openValves[state.currentRoom.name] = state.currentRoom.rate
-
-    val currentScore = state.bestScore + openValves.values.sum()
-    println("Score: $currentScore $turn $state")
-    if (turn == 30) {
-      val newState = state.copy(turnNum = turn, openValves = openValves)
-      newState.bestScore = currentScore
-      return recordBest(newState)
-    }
-
-    val newState = state.copy(turnNum = turn, openValves = openValves)
-    newState.bestScore = currentScore
-    if (cache.containsKey(newState)) {
-      println("Hit cache")
-      return cache[newState]!!
-    }
-
-
-    var bestState = newState
-    for (p in state.currentRoom.paths.filter { !newState.openValves.containsKey(it.destination) }) {
-      val pathState = moveTo(p, newState)
-      if (pathState.bestScore > bestState.bestScore) bestState = pathState
-    }
-
-    val turnsLeft = 30 - turn
-    val idleScore = currentScore + (turnsLeft * openValves.values.sum())
-    if (idleScore > bestState.bestScore) {
-      bestState = newState.copy(turnNum = 30)
-      bestState.bestScore = idleScore
-    }
-
-    cache[newState] = bestState
-    return recordBest(bestState)
+    val maxScore = max(newState.score, bestPath)
+    cache[newState] = maxScore
+    return maxScore
   }
 
   fun part2(): Any? {
