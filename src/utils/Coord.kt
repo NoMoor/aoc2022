@@ -1,4 +1,10 @@
+@file:Suppress("DataClassPrivateConstructor")
+
 package utils
+
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 data class Coord private constructor(val c: Int, val r: Int) {
   val x = c
@@ -50,6 +56,14 @@ data class Coord private constructor(val c: Int, val r: Int) {
     return neighborsBounded(0 until width, 0 until height, spec)
   }
 
+  operator fun compareTo(o: Coord) : Int {
+    return compareBy<Coord> { it.x }.thenComparingInt { it.y }.compare(this, o)
+  }
+
+  operator fun rangeTo(b: Coord) : CoordRange {
+    return CoordRange.from(this, b)
+  }
+
   companion object {
     val LEFT = Coord(-1, 0)
     val RIGHT = Coord(1, 0)
@@ -78,5 +92,36 @@ data class Coord private constructor(val c: Int, val r: Int) {
 
       return o.c in xRange && o.r in yRange
     }
+  }
+}
+
+data class CoordRange private constructor(val xRange: IntRange, val yRange: IntRange) {
+  val cRange = xRange
+  val rRange = yRange
+
+  companion object {
+    fun from(xRange: IntRange, yRange: IntRange) : CoordRange {
+      return CoordRange(
+        min(xRange.first, xRange.last)..max(xRange.first, xRange.last),
+        min(yRange.first, yRange.last)..max(yRange.first, yRange.last))
+    }
+
+    fun from(a: Coord, b: Coord) : CoordRange {
+      return CoordRange(min(a.x, b.x)..max(a.x, b.x), min(a.y, b.y)..max(a.y, b.y))
+    }
+
+
+    fun List<List<*>>.toCoordRange() : CoordRange {
+      val xEnd = if (this.isEmpty()) 0 else this[0].size
+      return from(0 until xEnd, 0 until this.size)
+    }
+  }
+
+  operator fun contains(o: Coord) : Boolean {
+    return o.x in xRange && o.y in yRange
+  }
+
+  fun expand(left: Int = 0, right: Int = 0, up: Int = 0, down: Int = 0) : CoordRange {
+    return Coord.xy(xRange.first + left, yRange.first + up) .. Coord.xy(xRange.last + right, yRange.last + down)
   }
 }

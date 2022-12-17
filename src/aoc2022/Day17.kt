@@ -3,6 +3,7 @@ package aoc2022
 import utils.*
 import utils.Coord.Companion.get
 import utils.Coord.Companion.set
+import utils.CoordRange.Companion.toCoordRange
 
 private class Day17(val lines: List<String>) {
   val goLefts = lines[0].toList().map { it == '<' }
@@ -20,37 +21,35 @@ private class Day17(val lines: List<String>) {
   fun part1(): Long {
     val grid = MutableList(10_000) { MutableList(7) { false } }
     var nextShape = 0
-    var time = 0
-    var highestSpot = -1
+    var currentTime = 0
+    var height = 0
 
     repeat(2022) {
       // Simulate rock
-      val spawn_loc = Coord.xy(2, highestSpot + 4)
-      var shape = shapes[nextShape % shapes.size].map { it + spawn_loc }.toList()
-      // Spawn
+      val spawnLoc = Coord.xy(2, height + 3)
+      var shape = shapes[nextShape % shapes.size].map { it + spawnLoc }.toList()
 
       while (true) {
         // Simulate left / right
-        val goLeft = goLefts[time % goLefts.size]
-        time++
+        val goLeft = goLefts[currentTime % goLefts.size]
+        currentTime++
         if (goLeft) {
-          if (isOpen(shape, Coord.LEFT, grid)) {
+          if (isAllowed(shape, Coord.LEFT, grid)) {
             shape = shape.map { it + Coord.LEFT }
           }
-        } else if (isOpen(shape, Coord.RIGHT, grid)) {
+        } else if (isAllowed(shape, Coord.RIGHT, grid)) {
           shape = shape.map { it + Coord.RIGHT }
         }
 
-        // simulate down
-        if (isOpen(shape, Coord.DOWN, grid)) {
-          shape = shape.map { it + Coord.DOWN }
-        } else {
+        if (!isAllowed(shape, Coord.DOWN, grid)) {
           break
         }
+        shape = shape.map { it + Coord.DOWN }
       }
 
+      // Set the shape into the grid and update the height of the stack.
       shape.forEach { grid[it] = true }
-      highestSpot = grid.indexOfLast { it.contains(true) }
+      height = grid.indexOfLast { it.contains(true) } + 1
 
       nextShape += 1
     }
@@ -58,102 +57,94 @@ private class Day17(val lines: List<String>) {
     return grid.indexOfLast { it.contains(true) }.toLong() + 1
   }
 
-  private fun isOpen(shape: List<Coord>, offset: Coord, grid: MutableList<MutableList<Boolean>>): Boolean {
-    return shape.none {
-      val spot = it + offset
-      !(spot.x in 0 until grid[0].size) || !(spot.y in 0 until grid.size) || grid[spot]
-    }
+  /** Returns true if moving the given shape by the relative movement would be legal. */
+  private fun isAllowed(shape: List<Coord>, movement: Coord, grid: MutableList<MutableList<Boolean>>): Boolean {
+    val gridSize = grid.toCoordRange()
+    return shape.map { it + movement }.all { it in gridSize && !grid[it] }
   }
 
-  private fun printGrid(
-    round: Int,
-    highestSpot: Int,
-    grid: MutableList<MutableList<Boolean>>
-  ) {
-    println("Round: $round")
-    for (i in highestSpot downTo 0) {
-      val row = grid[i].map { if (it) '#' else '.' }.joinToString("")
-      println(row)
+  private fun printGrid(grid: List<List<Boolean>>, height: Int = grid.size, label: String = "") {
+    println(label)
+    grid.subList(0, height + 1).reversed().forEach {
+      println(it.map { if (it) '#' else '.' }.joinToString(""))
     }
     println()
   }
 
   fun part2(): Long {
-    val windCycle = goLefts.size
-    val shapeCycle = shapes.size
+    val windCycleLength = goLefts.size
 
-    val seenCycles = mutableSetOf<Int>()
-    var cycleSyncNum: Int? = null
-
-    val partialCycleHeights = mutableListOf<Int>()
-    var ogCoord: Coord? = null
-    var ogRockNum = -1
+    // A set of wind cycles that we've already seen. Used to determine which wind numbers are in the cycle.
+    val seenWindCycles = mutableSetOf<Int>()
+    // Record the heights of the stack for a full cycle to compute the final height of the stack since the final height
+    // will include a partial cycle and the 'non-cycle' part of the stack before the cycle stabilizes.
+    val heightRecord = mutableListOf<Int>()
+    // The wind element indicating the start of the cycle. -1 means unset.
+    var windSyncNum = -1
+    // The rock number indicating the start of the cycle. -1 means unset.
+    var rockCycleNum = -1
 
     val grid = MutableList(100_000) { MutableList(7) { false } }
-    var rockCount = 0
+    var currentRockNum = 0
     var time = 0
-    var highestSpot = -1
+    var height = 0
 
     repeat(100000) {
       // Simulate rock
-      val spawn_loc = Coord.xy(2, highestSpot + 4)
-      var shape = shapes[rockCount % shapes.size].map { it + spawn_loc }.toList()
-      // Spawn
+      val spawnLoc = Coord.xy(2, height + 3)
+      var shape = shapes[currentRockNum % shapes.size].map { it + spawnLoc }.toList()
 
       while (true) {
         // Simulate left / right
-        val goLeft = goLefts[time % goLefts.size]
+        val goLeft = goLefts[time % windCycleLength]
         time++
         if (goLeft) {
-          if (isOpen(shape, Coord.LEFT, grid)) {
+          if (isAllowed(shape, Coord.LEFT, grid)) {
             shape = shape.map { it + Coord.LEFT }
           }
-        } else if (isOpen(shape, Coord.RIGHT, grid)) {
+        } else if (isAllowed(shape, Coord.RIGHT, grid)) {
           shape = shape.map { it + Coord.RIGHT }
         }
 
-        if (isOpen(shape, Coord.DOWN, grid)) {
-          shape = shape.map { it + Coord.DOWN }
-        } else {
+        if (!isAllowed(shape, Coord.DOWN, grid)) {
           break
         }
+        shape = shape.map { it + Coord.DOWN }
       }
 
+      // Set the shape into the grid and update the height of the stack.
       shape.forEach { grid[it] = true }
-      highestSpot = grid.indexOfLast { it.contains(true) }
+      height = grid.indexOfLast { it.contains(true) } + 1
 
-      // When the shape that's set is the last shape in the shape list
-      if (rockCount % shapes.size == (shapeCycle - 1)) {
-        // If we have cycle data and this is in sync with the cycle
-        if (cycleSyncNum != null && time % windCycle == cycleSyncNum) {
-          val cycleHeight = shape[0].y - ogCoord!!.y
-          val cycleLength = rockCount - ogRockNum
+      currentRockNum += 1
 
-          val rocksToJumpOver = 1000000000000 - ogRockNum
-          val cyclesToJump = rocksToJumpOver / cycleLength
-          val extraRocks = (rocksToJumpOver % cycleLength).toInt()
-
-          return (cyclesToJump * cycleHeight) + partialCycleHeights[extraRocks]
-        } else if (cycleSyncNum == null) {
-          val windNum = time % windCycle
-          if (!seenCycles.add(windNum)) {
-            cycleSyncNum = windNum
-            ogCoord = shape[0].copy()
-            ogRockNum = rockCount
-
-            println("Catching cycle $windNum")
+      // Find a cycle in block placement by looking at when we are about to place the first block.
+      // Wait for wind cycles to stablize and then track what one stable cycle looks like.
+      if (currentRockNum % shapes.size == 0) {
+        if (windSyncNum == -1) {
+          // Wait until we've seen the same wind position twice to be sure that it's a cycle
+          if (!seenWindCycles.add(time % windCycleLength)) {
+            windSyncNum = time % windCycleLength
+            rockCycleNum = currentRockNum
           }
+        } else if (time % windCycleLength == windSyncNum) {
+          // If we have cycle data and this is in sync with the cycle
+          val cycleHeight = heightRecord.last() - heightRecord.first()
+          val cycleLength = currentRockNum - rockCycleNum
+
+          val rocksRemaining = 1000000000000 - rockCycleNum
+          val cyclesRemaining = rocksRemaining / cycleLength
+          val extraRocks = (rocksRemaining % cycleLength).toInt()
+
+          return (cyclesRemaining * cycleHeight) + heightRecord[extraRocks]
         }
       }
-
-      if (ogCoord != null) {
-        partialCycleHeights.add(highestSpot)
+      if (windSyncNum != -1) {
+        heightRecord.add(height)
       }
-
-      rockCount += 1
     }
 
-    return lines.size.toLong()
+    throw RuntimeException("TSNH!")
   }
 }
 
