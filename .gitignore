@@ -3,4 +3,4 @@
 build
 src/**/*.txt
 src/**/*.csv
-src/.cookie
+/data/.cookie

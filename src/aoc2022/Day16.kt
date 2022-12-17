@@ -2,6 +2,7 @@ package aoc2022
 
 import utils.*
 import java.util.*
+import kotlin.math.max
 
 private const val STARTING_ROOM = "AA"
 
@@ -67,22 +68,42 @@ private class Day16(val lines: List<String>) {
   data class Actor(val minute: Int, val location: String)
 
   data class State(
-    val actor: Actor,
+    val actors: List<Actor>,
     val openValves: Set<String>,
     val isEle: Boolean = false,
     val isPt2: Boolean = false
-  )
+  ) {
+    constructor(actor: Actor, openValves: Set<String>, isEle: Boolean = false, isPt2: Boolean = false)
+        : this(listOf(actor), openValves, isEle, isPt2)
+
+    fun leadActor(): Actor {
+      return actors[0]
+    }
+  }
 
   fun part1(): Long {
     cache.clear()
     val state = State(Actor(0, STARTING_ROOM), setOf())
-    return sparseEdges[state.actor.location]!!.maxOfOrNull { goto(it, state, 30) }!!
+    val result = sparseEdges[state.leadActor().location]!!.maxOfOrNull {
+      goto(it, state, 30)
+    }!!
+    cache.clear()
+    return result
   }
 
   fun part2(): Long {
     cache.clear()
-    val state = State(Actor(0, STARTING_ROOM), setOf(), isPt2 = true)
-    return sparseEdges[state.actor.location]!!.maxOfOrNull { goto(it, state, 26) }!!
+
+    val me = Actor(0, STARTING_ROOM)
+    val elephant = Actor(0, STARTING_ROOM)
+
+    val state = State(listOf(me, elephant), setOf())
+    val result = sparseEdges[state.leadActor().location]!!.maxOfOrNull {
+      goto(it, state, 26)
+    }!!
+
+    cache.clear()
+    return result
   }
 
   /**
@@ -97,38 +118,45 @@ private class Day16(val lines: List<String>) {
     // Put us on turn + traversal time + 1 turn to turn on the valve.
     // We can check the turn to change the valve now because if we don't have time to turn it, we can't score
     // any more points.
-    val currentMinute = prevState.actor.minute + edge.weight + 1
+    val currentMinute = prevState.leadActor().minute + edge.weight + 1
 
-    if (currentMinute >= totalMinutes && prevState.isPt2 && !prevState.isEle) {
-      // Once we've taken all our turns, Let the elephant take all its turns.
-      val eleState = prevState.copy(actor = Actor(0, STARTING_ROOM), isEle = true)
-      val max = sparseEdges[eleState.actor.location]!!.filter { it.dest !in prevState.openValves }
-        .map { goto(it, eleState, totalMinutes) }
-        .max()
-
-      return max
-    } else if (currentMinute >= totalMinutes) {
-      return 0L
-    }
-
-    // Turn it on
+    // Turn on the valve
     val openValves = buildSet { addAll(prevState.openValves); add(loc.name) }
     val pressureReleasedThisTurn = loc.rate * (totalMinutes - currentMinute)
 
-    val newState = prevState.copy(actor = Actor(currentMinute, loc.name), openValves=openValves)
+    val actors = mutableListOf<Actor>()
+    actors.addAll(prevState.actors.drop(1))
+    actors.add(Actor(currentMinute, loc.name))
+    actors.sortedWith(compareBy<Actor> { it.minute }.thenBy { it.location })
+
+    val newState = prevState.copy(actors = actors, openValves=openValves)
+
+    if (newState.actors.any { it.minute >= totalMinutes }) {
+      return 0L
+    }
 
     if (cache.containsKey(newState)) {
       return cache[newState]!!
     }
 
-    val maxPressureReleasedAfterThisTurn = sparseEdges[newState.actor.location]!!
+    val maxPressureReleasedAfterThisTurn = sparseEdges[newState.leadActor().location]!!
       .filter { !newState.openValves.contains(it.dest) }
       .map { goto(it, newState, totalMinutes) }
       .maxOrNull() ?: 0L
 
-    val maxPressureReleased = maxPressureReleasedAfterThisTurn + pressureReleasedThisTurn
-    cache[newState] = maxPressureReleased
+    // If we have more than one actor, consider the case where the leader goes solo.
+    var maxPressureReleasedAfterThisTurnSolo = 0L
+    if (actors.size > 1) {
+      val soloState = newState.copy(actors = actors.take(1))
+      maxPressureReleasedAfterThisTurnSolo = sparseEdges[soloState.leadActor().location]!!
+        .filter { !soloState.openValves.contains(it.dest) }
+        .map { goto(it, soloState, totalMinutes) }
+        .maxOrNull() ?: 0L
+    }
 
+    val maxPressureReleased = max(maxPressureReleasedAfterThisTurnSolo, maxPressureReleasedAfterThisTurn) + pressureReleasedThisTurn
+
+    cache[newState] = maxPressureReleased
     return maxPressureReleased
   }
 }
@@ -142,6 +170,6 @@ fun main() {
   val today = Day16(readInput(day, 2022))
   execute(today::part1, "Day $day: pt 1")
 
-//   execute(todayTest::part2, "Day[Test] $day: pt 2")
-   execute(today::part2, "Day $day: pt 2", 2838L)
+  execute(todayTest::part2, "Day[Test] $day: pt 2", 1707L)
+  execute(today::part2, "Day $day: pt 2", 2838L)
 }
