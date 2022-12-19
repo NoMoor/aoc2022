@@ -75,6 +75,25 @@ private class Day19(val lines: List<String>) {
       }
 
       val resultList = mutableListOf<Int>()
+
+      // Make a state if we bought
+      if (state.robotCount[0] < maxOreRobotCost) {
+        val oreTurns = turnsToWait(blueprint.oreRobotCost - state.resourceCount[0], state.robotCount[0])
+        val turns = 1 + oreTurns
+
+        if (turns + state.time <= timeLimit) {
+          val resources =
+            state.resourceCount.zip(state.robotCount).map { it.first + (it.second * turns) }.toMutableList()
+          resources[0] -= blueprint.oreRobotCost
+          val robots = state.robotCount.toMutableList()
+          robots[0]++
+
+          stringLog.add("t${state.time + turns - 1} - Make Ore Robot")
+          resultList.add(findBestMostInternal(State(state.time + turns, resources, robots)))
+          stringLog.removeLast()
+        }
+      }
+
       if (state.robotCount[2] > 0) {
         // Simulate wait for geode
         val oreTurns = turnsToWait(blueprint.geodeRobotCost.first - state.resourceCount[0], state.robotCount[0])
@@ -126,24 +145,6 @@ private class Day19(val lines: List<String>) {
           robots[1]++
 
           stringLog.add("t${state.time + turns - 1} - Make Clay Robot")
-          resultList.add(findBestMostInternal(State(state.time + turns, resources, robots)))
-          stringLog.removeLast()
-        }
-      }
-
-      // Make a state if we bought
-      if (state.robotCount[0] < maxOreRobotCost) {
-        val oreTurns = turnsToWait(blueprint.oreRobotCost - state.resourceCount[0], state.robotCount[0])
-        val turns = 1 + oreTurns
-
-        if (turns + state.time <= timeLimit) {
-          val resources =
-            state.resourceCount.zip(state.robotCount).map { it.first + (it.second * turns) }.toMutableList()
-          resources[0] -= blueprint.oreRobotCost
-          val robots = state.robotCount.toMutableList()
-          robots[0]++
-
-          stringLog.add("t${state.time + turns - 1} - Make Ore Robot")
           resultList.add(findBestMostInternal(State(state.time + turns, resources, robots)))
           stringLog.removeLast()
         }
