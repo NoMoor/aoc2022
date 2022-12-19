@@ -36,7 +36,6 @@ private class Day19(val lines: List<String>) {
   )
 
   fun findBestMove(blueprint: Blueprint, state: State, timeLimit: Int = 24): Int {
-    val cache = mutableMapOf<State, Int>()
     var best = 0
     val bestLog = mutableListOf<String>()
     var stringLog = mutableListOf<String>()
