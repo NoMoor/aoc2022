@@ -38,7 +38,7 @@ private class Day19(val lines: List<String>) {
   fun findBestMove(blueprint: Blueprint, state: State, timeLimit: Int = 24): Int {
     var best = 0
     val bestLog = mutableListOf<String>()
-    var stringLog = mutableListOf<String>()
+    val stringLog = mutableListOf<String>()
 
     val maxOreRobotCost = listOf(
       blueprint.oreRobotCost,
@@ -175,14 +175,14 @@ private class Day19(val lines: List<String>) {
   fun part1(): Int {
     val blueprints = parseInput()
 
-    val result = blueprints.map {
+    val result = blueprints.sumOf {
       println("Try best score: ${it.id}")
       val initialState = State(1, mutableListOf(0, 0, 0, 0), mutableListOf(1, 0, 0, 0))
       val bestScore = findBestMove(it, initialState)
       println()
       println("Best Score $bestScore ${it.id}")
       it.id * bestScore
-    }.sum()
+    }
 
     println("Potential answer: $result")
 
