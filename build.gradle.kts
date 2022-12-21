@@ -16,6 +16,7 @@ repositories {
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation("com.beust:klaxon:5.6")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4-native-mt")
 }
 
 tasks.withType<KotlinCompile> {
