@@ -2,6 +2,7 @@ package aoc2022
 
 import utils.*
 import java.util.*
+import kotlin.system.measureNanoTime
 
 private class Day23(val lines: List<String>) {
   val elfPositions = lines.mapIndexed { r, row ->
@@ -10,14 +11,18 @@ private class Day23(val lines: List<String>) {
     }
   }.flatten().filter { it != Coord.rc(Int.MAX_VALUE, Int.MAX_VALUE) }
 
+  private val proposalOffsets = listOf(
+    listOf(Coord.xy(-1, 1), Coord.xy(0, 1), Coord.xy(1, 1)), // North
+    listOf(Coord.xy(-1, -1), Coord.xy(0, -1), Coord.xy(1, -1)), // south
+    listOf(Coord.xy(-1, -1), Coord.xy(-1, 0), Coord.xy(-1, 1)), // west
+    listOf(Coord.xy(1, -1), Coord.xy(1, 0), Coord.xy(1, 1)), // east
+  )
 
-  fun generateProposalDirections(c: Coord) : List<List<Coord>> {
-    return listOf(
-      listOf(c + Coord.xy(-1, 1), c + Coord.xy(0, 1), c + Coord.xy(1, 1)), // North
-      listOf(c + Coord.xy(-1, -1), c + Coord.xy(0, -1), c + Coord.xy(1, -1)), // south
-      listOf(c + Coord.xy(-1, -1), c + Coord.xy(-1, 0), c + Coord.xy(-1, 1)), // west
-      listOf(c + Coord.xy(1, -1), c + Coord.xy(1, 0), c + Coord.xy(1, 1)), // east
-    )
+  fun generateProposalDirections(c: Coord, roundNum: Int) : List<List<Coord>> {
+    val p = proposalOffsets.toMutableList()
+    Collections.rotate(p, -roundNum)
+
+    return p.map { it.map { it + c } }
   }
 
   fun part1(): Long {
@@ -29,10 +34,9 @@ private class Day23(val lines: List<String>) {
 
     repeat(10) { roundNum ->
       val proposedPositions = currElfPositions.map {
-        val suggestions = generateProposalDirections(it).toMutableList()
-        Collections.rotate(suggestions, -roundNum)
+        val suggestions = generateProposalDirections(it, roundNum)
 
-        if (suggestions.flatten().none { it in currElfPositions }) {
+        if (suggestions.all { it.none { it in currElfPositions } }) {
           return@map it to it
         }
 
@@ -77,42 +81,42 @@ private class Day23(val lines: List<String>) {
   }
 
   fun part2(): Long {
-    var currElfPositions = elfPositions.toSet()
+    val currElfPositions = elfPositions.toMutableSet()
 
     println()
     println("Initial pos")
+    visualizeElves(currElfPositions)
 
     var roundNum = 0
     while (true) {
       roundNum++
 
-      val proposedPositions = currElfPositions.map {
-        val suggestions = generateProposalDirections(it).toMutableList()
-        // Rotate left 1 when we are on round 2, left 0 on round 5, etc.
-        Collections.rotate(suggestions, -(roundNum - 1))
+      val proposedPositions = currElfPositions.groupBy {
+        val suggestions = generateProposalDirections(it, roundNum - 1)
 
         // If no other elves are around this elf, stay here.
-        if (suggestions.flatten().none { it in currElfPositions }) {
-          return@map it to it
+        if (suggestions.all { it.none { it in currElfPositions } }) {
+          return@groupBy it
         }
 
         // Map the current position to the proposed position.
-        it to (suggestions.firstOrNull { it.none { it in currElfPositions } }?.get(1) ?: it)
+        suggestions.firstOrNull { it.none { it in currElfPositions } }?.get(1) ?: it
       }
 
-      val proposedPositionToPairs = proposedPositions.groupBy { it.second }
-      val newPositions = mutableListOf<Coord>()
       var movingCount = 0
-      for (e in proposedPositionToPairs) {
+
+      currElfPositions.clear()
+
+      for (e in proposedPositions) {
         if (e.value.size == 1) {
-          newPositions.add(e.key)
+          currElfPositions.add(e.key)
 
           // Only count moves when the new position is different from the old position.
-          if (e.key != e.value[0].first) {
+          if (e.key != e.value[0]) {
             movingCount++
           }
         } else {
-          newPositions.addAll(e.value.map { it.first }) // Stay still
+          currElfPositions.addAll(e.value) // Stay still
         }
       }
 
@@ -121,21 +125,23 @@ private class Day23(val lines: List<String>) {
         visualizeElves(currElfPositions)
         return roundNum.toLong()
       }
-
-      currElfPositions = newPositions.toSet()
     }
   }
 }
 
 fun main() {
-  val day = "23".toInt()
+  val totalTime = measureNanoTime {
+    val day = "23".toInt()
 
-  val todayTest = Day23(readInput(day, 2022, true))
-  execute(todayTest::part1, "Day[Test] $day: pt 1", 110L)
+    val todayTest = Day23(readInput(day, 2022, true))
+    execute(todayTest::part1, "Day[Test] $day: pt 1", 110L)
 
-  val today = Day23(readInput(day, 2022))
-  execute(today::part1, "Day $day: pt 1", 3917L)
+    val today = Day23(readInput(day, 2022))
+    execute(today::part1, "Day $day: pt 1", 3917L)
 
-  execute(todayTest::part2, "Day[Test] $day: pt 2", 20L)
-  execute(today::part2, "Day $day: pt 2", 988L)
+    execute(todayTest::part2, "Day[Test] $day: pt 2", 20L)
+    execute(today::part2, "Day $day: pt 2", 988L)
+  }
+
+  println("Total time: ${formatNanos(totalTime)}")
 }
